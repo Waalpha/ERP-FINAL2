@@ -398,17 +398,7 @@ export const INITIAL_USERS: AppUser[] = [
     phone: '+254 700 888 901',
     photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
   },
-  {
-    uid: 'user-retail-manager',
-    email: 'manager.hassan@apexwholesale.co.ke',
-    displayName: 'Hassan Noor (Retail & POS Manager)',
-    tenantId: 'tenant-apex-retail',
-    tenantName: 'Apex Wholesale Hub',
-    role: 'MANAGER',
-    isActive: true,
-    phone: '+254 733 444 501',
-    photoURL: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80'
-  },
+
   {
     uid: 'user-hospital-admin',
     email: 'dr.wanjiku@greenvalehospital.org',
