@@ -230,30 +230,6 @@ export const INITIAL_TENANTS: Tenant[] = [
     }
   },
   {
-    id: 'tenant-apex-retail',
-    name: 'Apex Wholesale & Distribution Hub',
-    code: 'AWD-BIZ',
-    subdomain: 'apex',
-    dnsStatus: 'CONFIGURED',
-    type: 'RETAIL',
-    status: 'ACTIVE',
-    createdAt: '2024-08-12T14:20:00.000Z',
-    plan: 'PREMIUM',
-    modules: ['INVENTORY', 'SALES', 'POS', 'SUPPLIERS', 'FINANCE', 'CUSTOMERS', 'REPORTS'],
-    currency: 'KES',
-    currentTerm: 'TERM_1',
-    currentAcademicYear: '2025',
-    contactEmail: 'sales@apexwholesale.co.ke',
-    phone: '+254 733 444 555',
-    address: 'Industrial Area, Mombasa, Kenya',
-    stats: {
-      studentCount: 85,
-      staffCount: 14,
-      totalFeeCollected: 6450000,
-      totalFeeBalance: 580000
-    }
-  },
-  {
     id: 'tenant-bitc',
     name: 'Breakthrough Institute of Technology & Commercial Studies (BITC)',
     code: 'BITC-COL',
