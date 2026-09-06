@@ -1,0 +1,189 @@
+{
+  "entities": {
+    "PlatformUser": {
+      "title": "Platform User",
+      "description": "Global user identity linked to a specific tenant with role and permissions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "tenantId": { "type": "string", "maxLength": 64 },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "TENANT_ADMIN", "MANAGER", "ACCOUNTANT", "CASHIER", "TEACHER", "STAFF", "VIEWER"] },
+        "isActive": { "type": "boolean" },
+        "phone": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["uid", "email", "tenantId", "role", "isActive"]
+    },
+    "Tenant": {
+      "title": "Tenant Organization",
+      "description": "Enterprise tenant record for School, Hospital, Business, or Retail",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 150 },
+        "code": { "type": "string", "maxLength": 32 },
+        "type": { "type": "string", "enum": ["PRIMARY_SCHOOL", "SECONDARY_SCHOOL", "COLLEGE", "UNIVERSITY", "HOSPITAL", "BUSINESS", "RETAIL"] },
+        "status": { "type": "string", "enum": ["ACTIVE", "SUSPENDED", "TRIAL"] },
+        "plan": { "type": "string", "enum": ["BASIC", "PREMIUM", "ENTERPRISE"] },
+        "modules": { "type": "array", "items": { "type": "string" } },
+        "currency": { "type": "string" },
+        "currentTerm": { "type": "string" },
+        "currentAcademicYear": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "status", "plan", "modules", "currency"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Primary school student record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "admissionNo": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "gender": { "type": "string" },
+        "grade": { "type": "string" },
+        "stream": { "type": "string" },
+        "parentName": { "type": "string" },
+        "parentPhone": { "type": "string" },
+        "feeBalance": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "tenantId", "admissionNo", "firstName", "lastName", "grade", "parentName", "parentPhone", "status"]
+    },
+    "StaffMember": {
+      "title": "Staff Member",
+      "description": "Tenant employee with designated role, credentials and system permissions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "designation": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "loginAccessEnabled": { "type": "boolean" }
+      },
+      "required": ["id", "tenantId", "fullName", "email", "role", "designation", "isActive"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Immutable security and activity audit entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "category": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "tenantId", "userId", "action", "details", "timestamp"]
+    },
+    "TenantWebsiteConfig": {
+      "title": "Tenant Website Configuration",
+      "description": "Public website theme, navigation, pages and contact info",
+      "type": "object",
+      "properties": {
+        "tenantId": { "type": "string" },
+        "isPublished": { "type": "boolean" },
+        "displayPlatformBranding": { "type": "boolean" },
+        "theme": { "type": "object" },
+        "navigation": { "type": "object" },
+        "pages": { "type": "array" },
+        "contactInfo": { "type": "object" }
+      },
+      "required": ["tenantId", "isPublished", "theme", "pages", "contactInfo"]
+    },
+    "PlatformSettings": {
+      "title": "Platform Settings",
+      "description": "Global platform branding, subscription tiers, and pricing configurations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "platformName": { "type": "string" },
+        "supportEmail": { "type": "string" },
+        "currency": { "type": "string" },
+        "theme": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/platform_settings/{settingId}": {
+      "schema": "PlatformSettings",
+      "description": "Global platform configurations, branding, and subscription tier items"
+    },
+    "/platform_users/{userId}": {
+      "schema": "PlatformUser",
+      "description": "Platform user profiles for multi-tenant access control"
+    },
+    "/tenants/{tenantId}": {
+      "schema": "Tenant",
+      "description": "Tenant enterprise configurations"
+    },
+    "/tenants/{tenantId}/website/config": {
+      "schema": "TenantWebsiteConfig",
+      "description": "Tenant public website configuration and pages"
+    },
+    "/tenants/{tenantId}/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Tenant activity audit log stream"
+    },
+    "/tenants/{tenantId}/staff/{staffId}": {
+      "schema": "StaffMember",
+      "description": "Tenant staff directory and credentials"
+    },
+    "/tenants/{tenantId}/students/{studentId}": {
+      "schema": "Student",
+      "description": "Isolated student records per tenant"
+    },
+    "/tenants/{tenantId}/fee_structures/{feeId}": {
+      "schema": "FeeStructureItem",
+      "description": "School fee structure definitions per grade/term"
+    },
+    "/tenants/{tenantId}/invoices/{invoiceId}": {
+      "schema": "StudentInvoice",
+      "description": "Student fee invoices"
+    },
+    "/tenants/{tenantId}/payments/{paymentId}": {
+      "schema": "FeePayment",
+      "description": "Recorded student fee payments and receipts"
+    },
+    "/tenants/{tenantId}/retail_products/{productId}": {
+      "schema": "RetailProduct",
+      "description": "Inventory products for retail and business POS"
+    },
+    "/tenants/{tenantId}/retail_sales/{saleId}": {
+      "schema": "RetailSale",
+      "description": "Completed POS checkout sales"
+    },
+    "/tenants/{tenantId}/hospital_patients/{patientId}": {
+      "schema": "HospitalPatient",
+      "description": "Hospital and clinic patient registry"
+    },
+    "/tenants/{tenantId}/theology_programs/{programId}": {
+      "schema": "TheologyProgram",
+      "description": "Seminary academic theological programs"
+    },
+    "/tenants/{tenantId}/theology_students/{studentId}": {
+      "schema": "TheologyStudent",
+      "description": "Seminary and theology candidates"
+    },
+    "/tenants/{tenantId}/college_courses/{courseId}": {
+      "schema": "CollegeCourse",
+      "description": "College and TVET academic courses"
+    },
+    "/tenants/{tenantId}/college_students/{studentId}": {
+      "schema": "CollegeStudent",
+      "description": "College and TVET enrolled students"
+    }
+  }
+}
