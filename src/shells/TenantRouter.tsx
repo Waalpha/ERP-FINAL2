@@ -24,6 +24,7 @@ import { TenantWebsiteCMS } from '../pages/CMS/TenantWebsiteCMS';
 import { PublicTenantWebsite } from '../components/PublicWebsite/PublicTenantWebsite';
 import { SystemAdministration } from '../pages/Settings/SystemAdministration';
 import { StaffDirectory } from '../pages/Staff/StaffDirectory';
+import { TenantAnalyticsDashboard } from '../pages/PrimarySchool/TenantAnalyticsDashboard';
 import { generateDefaultWebsiteConfig } from '../services/TenantWebsiteGenerator';
 import { normalizeTenantType } from '../services/ModuleRegistry';
 import { Student, Tenant } from '../types';
@@ -64,6 +65,10 @@ export const TenantRouter: React.FC<TenantRouterProps> = ({
   const tType = normalizeTenantType(tenant.type);
 
   // Universal Mandatory Modules across ALL tenant types
+  if (currentTab === 'tenant-analytics') {
+    return <TenantAnalyticsDashboard onNavigate={onNavigateTab} />;
+  }
+
   if (currentTab === 'tenant-website-cms' || currentTab === 'website-cms') {
     return <TenantWebsiteCMS onOpenPublicSite={() => onNavigateTab('public-website')} />;
   }

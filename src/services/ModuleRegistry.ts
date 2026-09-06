@@ -23,7 +23,8 @@ import {
   Receipt,
   Award,
   UserCheck,
-  Globe
+  Globe,
+  Activity
 } from 'lucide-react';
 
 export interface NavItem {
@@ -199,6 +200,7 @@ export function getNavigationForTenant(tenant: Tenant): NavSection[] {
         {
           title: 'ADMINISTRATION',
           items: [
+            { id: 'tenant-analytics', label: 'Tenant Activity & Analytics', icon: Activity },
             { id: 'tenant-website-cms', label: 'Website / CMS', icon: Globe },
             { id: 'system-administration', label: 'System Administration', icon: Shield },
             { id: 'school-settings', label: 'School Settings', icon: Settings }
