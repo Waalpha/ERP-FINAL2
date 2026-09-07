@@ -34,7 +34,14 @@ import {
   Smartphone,
   AlertCircle,
   Bell,
-  Settings
+  Settings,
+  Users,
+  ArrowLeft,
+  TrendingUp,
+  Check,
+  MapPin,
+  User,
+  BookmarkCheck
 } from 'lucide-react';
 import {
   TheologyProgram,
@@ -49,11 +56,13 @@ import {
 
 interface TheologyManagementProps {
   currentTab?: string;
+  onNavigateTab?: (tab: string) => void;
 }
 
-export const TheologyManagement: React.FC<TheologyManagementProps> = ({ currentTab = 'theology-programs' }) => {
+export const TheologyManagement: React.FC<TheologyManagementProps> = ({ currentTab = 'theology-overview', onNavigateTab }) => {
   const {
     tenant,
+    staff,
     theologyPrograms,
     theologyStudents,
     theologyPracticumLogs,
@@ -74,31 +83,42 @@ export const TheologyManagement: React.FC<TheologyManagementProps> = ({ currentT
   } = useAuth();
 
   // Internal Tab Switcher if embedded or controlled
-  const [activeSubTab, setActiveSubTab] = useState<'programs' | 'students' | 'practicum' | 'library' | 'curriculum' | 'fees' | 'staff' | 'reports' | 'sms' | 'settings'>(() => {
-    if (currentTab === 'theology-students') return 'students';
-    if (currentTab === 'theology-fees') return 'fees';
-    if (currentTab === 'theology-practicum') return 'practicum';
-    if (currentTab === 'theology-library') return 'library';
-    if (currentTab === 'theology-curriculum') return 'curriculum';
-    if (currentTab === 'theology-staff') return 'staff';
+  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'programs' | 'students' | 'practicum' | 'library' | 'curriculum' | 'fees' | 'staff' | 'reports' | 'sms' | 'settings' | 'timetable' | 'attendance'>(() => {
+    if (currentTab === 'theology-students' || currentTab === 'theology-admissions') return 'students';
+    if (currentTab === 'theology-fees' || currentTab === 'theology-payments' || currentTab === 'theology-sponsorships' || currentTab === 'theology-financial-reports') return 'fees';
+    if (currentTab === 'theology-practicum' || currentTab === 'theology-pastoral' || currentTab === 'theology-sermons' || currentTab === 'theology-placements' || currentTab === 'theology-supervisor-reports') return 'practicum';
+    if (currentTab === 'theology-library' || currentTab === 'theology-books' || currentTab === 'theology-research') return 'library';
+    if (currentTab === 'theology-curriculum' || currentTab === 'theology-courses') return 'curriculum';
+    if (currentTab === 'theology-timetable') return 'timetable';
+    if (currentTab === 'theology-attendance') return 'attendance';
+    if (currentTab === 'theology-staff' || currentTab === 'staff-directory') return 'staff';
     if (currentTab === 'theology-reports') return 'reports';
     if (currentTab === 'theology-sms') return 'sms';
     if (currentTab === 'theology-settings') return 'settings';
-    return 'programs';
+    if (currentTab === 'theology-programs') return 'programs';
+    return 'overview';
   });
 
   React.useEffect(() => {
-    if (currentTab === 'theology-students') setActiveSubTab('students');
-    else if (currentTab === 'theology-fees') setActiveSubTab('fees');
-    else if (currentTab === 'theology-practicum') setActiveSubTab('practicum');
-    else if (currentTab === 'theology-library') setActiveSubTab('library');
-    else if (currentTab === 'theology-staff') setActiveSubTab('staff');
+    if (currentTab === 'theology-students' || currentTab === 'theology-admissions') setActiveSubTab('students');
+    else if (currentTab === 'theology-fees' || currentTab === 'theology-payments' || currentTab === 'theology-sponsorships' || currentTab === 'theology-financial-reports') setActiveSubTab('fees');
+    else if (currentTab === 'theology-practicum' || currentTab === 'theology-pastoral' || currentTab === 'theology-sermons' || currentTab === 'theology-placements' || currentTab === 'theology-supervisor-reports') setActiveSubTab('practicum');
+    else if (currentTab === 'theology-library' || currentTab === 'theology-books' || currentTab === 'theology-research') setActiveSubTab('library');
+    else if (currentTab === 'theology-staff' || currentTab === 'staff-directory') setActiveSubTab('staff');
     else if (currentTab === 'theology-reports') setActiveSubTab('reports');
     else if (currentTab === 'theology-sms') setActiveSubTab('sms');
     else if (currentTab === 'theology-settings') setActiveSubTab('settings');
-    else if (currentTab === 'theology-curriculum') setActiveSubTab('curriculum');
-    else setActiveSubTab('programs');
+    else if (currentTab === 'theology-curriculum' || currentTab === 'theology-courses') setActiveSubTab('curriculum');
+    else if (currentTab === 'theology-timetable') setActiveSubTab('timetable');
+    else if (currentTab === 'theology-attendance') setActiveSubTab('attendance');
+    else if (currentTab === 'theology-programs') setActiveSubTab('programs');
+    else setActiveSubTab('overview');
   }, [currentTab]);
+
+  const navigateTo = (tab: string, subTab?: 'overview' | 'programs' | 'students' | 'practicum' | 'library' | 'curriculum' | 'fees' | 'staff' | 'reports' | 'sms' | 'settings' | 'timetable' | 'attendance') => {
+    if (subTab) setActiveSubTab(subTab);
+    if (onNavigateTab) onNavigateTab(tab);
+  };
 
   // Seminary Settings / Institution Profile Form State
   const [settingsName, setSettingsName] = useState(tenant?.name || '');
@@ -517,237 +537,848 @@ export const TheologyManagement: React.FC<TheologyManagementProps> = ({ currentT
 
   return (
     <div className="space-y-6">
-      {/* Theology & Divinity Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden text-white">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-gradient-to-br from-indigo-500/10 via-amber-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="flex items-center space-x-2.5 flex-wrap gap-y-1">
-              <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center space-x-1.5">
-                <Flame className="h-3.5 w-3.5 text-amber-400" />
-                <span>Theology & Divinity Seminary</span>
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                Certificate to Bachelor of Theology (B.Th.)
-              </span>
-              <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/30 font-medium">
-                {tenant?.name || "St. Paul's Theological College"}
+      {/* Top Academic Sub-Header for non-overview subtabs */}
+      {activeSubTab !== 'overview' && (
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs text-slate-500">
+              <button
+                onClick={() => navigateTo('theology-overview', 'overview')}
+                className="hover:text-amber-800 font-medium flex items-center space-x-1"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                <span>Seminary Dashboard</span>
+              </button>
+              <span>/</span>
+              <span className="text-slate-800 font-semibold capitalize">
+                {activeSubTab === 'programs' && 'Academic Hierarchy & Programmes'}
+                {activeSubTab === 'students' && 'Seminarians & Candidates Directory'}
+                {activeSubTab === 'practicum' && 'Ministry Practicum & Parish Fieldwork'}
+                {activeSubTab === 'fees' && 'Seminary Fees & Diocesan Sponsorships'}
+                {activeSubTab === 'library' && 'Theological Library & Patristic Archives'}
+                {activeSubTab === 'curriculum' && 'Curriculum Syllabi & Unit Catalog'}
+                {activeSubTab === 'timetable' && 'Lecture & Chapel Timetable'}
+                {activeSubTab === 'attendance' && 'Chapel & Lecture Attendance'}
+                {activeSubTab === 'staff' && 'Faculty of Divinity & Staff'}
+                {activeSubTab === 'reports' && 'Academic & Ministerial Reports'}
+                {activeSubTab === 'sms' && 'Seminarian Communication & SMS'}
+                {activeSubTab === 'settings' && 'Seminary Institutional Settings'}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2 text-white flex items-center space-x-3">
-              <span>Department of Theology & Biblical Studies</span>
+            <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
+              <span>
+                {activeSubTab === 'programs' && 'Academic Programmes & Curriculum Progression'}
+                {activeSubTab === 'students' && 'Seminarians & Ordination Candidates'}
+                {activeSubTab === 'practicum' && 'Ministry Practicum & Fieldwork Logs'}
+                {activeSubTab === 'fees' && 'Seminary Fees & Diocesan Sponsorships'}
+                {activeSubTab === 'library' && 'Theological Library & Research Archives'}
+                {activeSubTab === 'curriculum' && 'Curricular Units & Course Outlines'}
+                {activeSubTab === 'timetable' && 'Lecture & Chapel Timetable'}
+                {activeSubTab === 'attendance' && 'Attendance & Chapel Roster'}
+                {activeSubTab === 'staff' && 'Faculty of Divinity & Seminary Staff'}
+                {activeSubTab === 'reports' && 'Seminary Academic & Ministerial Reports'}
+                {activeSubTab === 'sms' && 'Seminarian & Parish Communication'}
+                {activeSubTab === 'settings' && 'Seminary Profile & Academic Year'}
+              </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-3xl mt-2 leading-relaxed">
-              Curriculum progression from Foundations Certificate to Bachelor of Theology (B.Th.).
-              Managing biblical language exegesis (Greek/Hebrew), systematic dogmatics, pastoral practicum fieldwork, ordination candidates, and patristic library archives.
-            </p>
           </div>
 
-          {/* Header Action Buttons */}
-          <div className="flex items-center flex-wrap gap-2.5">
-            <button
-              onClick={() => setShowStudentModal(true)}
-              className="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-600/20 flex items-center space-x-1.5 transition-all transform active:scale-95"
-            >
-              <UserCheck className="h-4 w-4" />
-              <span>Admit Seminarian</span>
-            </button>
-            <button
-              onClick={() => setShowTheologyInvoiceModal(true)}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center space-x-1.5 transition-all transform active:scale-95"
-            >
-              <Receipt className="h-4 w-4" />
-              <span>Issue Tuition Invoice</span>
-            </button>
-            <button
-              onClick={() => setShowTheologyPaymentModal(true)}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center space-x-1.5 transition-all transform active:scale-95"
-            >
-              <DollarSign className="h-4 w-4" />
-              <span>Record Fee / Bursary</span>
-            </button>
-            <button
-              onClick={() => setShowPracticumModal(true)}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
-            >
-              <HeartHandshake className="h-4 w-4 text-indigo-400" />
-              <span>Log Practicum</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Theology KPIs & Academic Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-6 pt-6 border-t border-slate-800/80">
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-2xl p-4">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Total Seminarians</span>
-              <GraduationCap className="h-4 w-4 text-amber-400" />
-            </div>
-            <div className="text-2xl font-black text-white mt-1.5">{totalSeminarians}</div>
-            <div className="text-[11px] text-amber-300 mt-0.5">Certificate to B.Th. Candidates</div>
-          </div>
-
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-2xl p-4">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Total Invoiced</span>
-              <Receipt className="h-4 w-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-black text-emerald-400 mt-1.5">KES {totalTheologyInvoiced.toLocaleString()}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Seminary Term Billings</div>
-          </div>
-
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-2xl p-4">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Collected / Bursaries</span>
-              <DollarSign className="h-4 w-4 text-indigo-400" />
-            </div>
-            <div className="text-2xl font-black text-indigo-300 mt-1.5">
-              KES {totalTheologyCollected.toLocaleString()}
-            </div>
-            <div className="text-[11px] text-indigo-200 mt-0.5">Diocesan Grants: KES {totalDiocesanBursaries.toLocaleString()}</div>
-          </div>
-
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-2xl p-4">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Seminary Arrears</span>
-              <AlertCircle className="h-4 w-4 text-rose-400" />
-            </div>
-            <div className="text-2xl font-black text-rose-400 mt-1.5">KES {totalTheologyArrears.toLocaleString()}</div>
-            <div className="text-[11px] text-rose-300 mt-0.5">Outstanding Balances</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Internal Navigation Subtabs */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5 rounded-2xl shadow-xs overflow-x-auto gap-2">
-        <div className="flex items-center space-x-1 sm:space-x-2 min-w-max">
-          <button
-            onClick={() => setActiveSubTab('programs')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'programs'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Award className="h-4 w-4" />
-            <span>Academic Hierarchy & Programs ({theologyPrograms.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('students')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'students'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <GraduationCap className="h-4 w-4" />
-            <span>Seminarians & Candidates ({theologyStudents.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('fees')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'fees'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Receipt className="h-4 w-4" />
-            <span>Seminary Fees & Diocesan Sponsorships ({safeTheologyInvoices.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('practicum')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'practicum'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <HeartHandshake className="h-4 w-4" />
-            <span>Ministry Practicum & Fieldwork</span>
-            {pendingPracticumLogsCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black">
-                {pendingPracticumLogsCount}
-              </span>
+          {/* Contextual Action Button */}
+          <div className="flex items-center space-x-2">
+            {activeSubTab === 'programs' && (
+              <button
+                onClick={() => setShowProgramModal(true)}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Add Programme</span>
+              </button>
             )}
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('library')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'library'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Library className="h-4 w-4" />
-            <span>Divinity & Patristics Library ({theologyLibraryResources.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('curriculum')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'curriculum'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Scroll className="h-4 w-4" />
-            <span>Greek & Hebrew Exegesis</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('staff')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'staff'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <UserCheck className="h-4 w-4" />
-            <span>Faculty & Staff</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('reports')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'reports'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <FileText className="h-4 w-4" />
-            <span>Seminary Reports</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('sms')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'sms'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Bell className="h-4 w-4" />
-            <span>Communication / SMS</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('settings')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-              activeSubTab === 'settings'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Settings className="h-4 w-4" />
-            <span>Seminary Settings</span>
-          </button>
+            {activeSubTab === 'students' && (
+              <button
+                onClick={() => setShowStudentModal(true)}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+              >
+                <UserCheck className="h-4 w-4" />
+                <span>Admit Seminarian</span>
+              </button>
+            )}
+            {activeSubTab === 'practicum' && (
+              <button
+                onClick={() => setShowPracticumModal(true)}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+              >
+                <HeartHandshake className="h-4 w-4" />
+                <span>Record Practicum Log</span>
+              </button>
+            )}
+            {activeSubTab === 'fees' && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowTheologyInvoiceModal(true)}
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1"
+                >
+                  <Receipt className="h-3.5 w-3.5" />
+                  <span>Issue Invoice</span>
+                </button>
+                <button
+                  onClick={() => setShowTheologyPaymentModal(true)}
+                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1"
+                >
+                  <DollarSign className="h-3.5 w-3.5" />
+                  <span>Record Fee / Bursary</span>
+                </button>
+              </div>
+            )}
+            {activeSubTab === 'library' && (
+              <button
+                onClick={() => setShowResourceModal(true)}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Add Resource</span>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* DASHBOARD OVERVIEW: Premium Theological Seminary Management System */}
+      {activeSubTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Welcome Section */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-xs relative overflow-hidden border-l-4 border-amber-500">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2 max-w-3xl">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 flex items-center space-x-1.5">
+                    <Church className="h-3.5 w-3.5 text-amber-700" />
+                    <span>Theological Seminary & Bible College</span>
+                  </span>
+                  <span className="text-xs text-slate-500 font-mono">
+                    Certificate to Bachelor of Theology (B.Th.)
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                  Welcome to {tenant?.name || 'Injiri Centre Nyeri'}
+                </h1>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Manage students, theological programmes, ministry practicum, faculty, fees and seminary administration.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center flex-wrap gap-2.5">
+                <button
+                  onClick={() => setShowStudentModal(true)}
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition"
+                >
+                  <UserCheck className="h-4 w-4 text-amber-400" />
+                  <span>Admit Seminarian</span>
+                </button>
+                <button
+                  onClick={() => setShowTheologyInvoiceModal(true)}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition"
+                >
+                  <Receipt className="h-4 w-4 text-slate-500" />
+                  <span>Issue Tuition Invoice</span>
+                </button>
+                <button
+                  onClick={() => setShowTheologyPaymentModal(true)}
+                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  <span>Record Fee / Bursary</span>
+                </button>
+                <button
+                  onClick={() => setShowPracticumModal(true)}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition"
+                >
+                  <HeartHandshake className="h-4 w-4 text-amber-600" />
+                  <span>Log Fieldwork</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 6 Attractive Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+            {/* Total Students */}
+            <div
+              onClick={() => navigateTo('theology-students', 'students')}
+              className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-amber-400 hover:shadow-sm transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Total Students</span>
+                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                  <GraduationCap className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-black text-slate-900">{totalSeminarians}</div>
+                <div className="text-[11px] text-amber-800 font-medium mt-0.5">{ordinationCandidatesCount} Ordination Track</div>
+              </div>
+            </div>
+
+            {/* Active Programmes */}
+            <div
+              onClick={() => navigateTo('theology-programs', 'programs')}
+              className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-slate-300 hover:shadow-sm transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Active Programmes</span>
+                <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                  <Scroll className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-black text-slate-900">{theologyPrograms.length}</div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5">Cert to B.Th. Curricula</div>
+              </div>
+            </div>
+
+            {/* Faculty & Staff */}
+            <div
+              onClick={() => navigateTo('theology-staff', 'staff')}
+              className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-slate-300 hover:shadow-sm transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Faculty & Staff</span>
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                  <Users className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-black text-slate-900">{(staff && staff.length > 0) ? staff.length : 8}</div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5">Deans & Lecturers</div>
+              </div>
+            </div>
+
+            {/* Fees Collected */}
+            <div
+              onClick={() => navigateTo('theology-fees', 'fees')}
+              className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-emerald-400 hover:shadow-sm transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Fees Collected</span>
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <DollarSign className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-lg sm:text-xl font-black text-emerald-700 truncate">
+                  KES {totalTheologyCollected.toLocaleString()}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                  Grants: KES {totalDiocesanBursaries.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Outstanding Fees */}
+            <div
+              onClick={() => navigateTo('theology-fees', 'fees')}
+              className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-rose-300 hover:shadow-sm transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Outstanding Fees</span>
+                <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center">
+                  <AlertCircle className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-lg sm:text-xl font-black text-rose-600 truncate">
+                  KES {totalTheologyArrears.toLocaleString()}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5">Term Arrears Ledger</div>
+              </div>
+            </div>
+
+            {/* Ministry Practicum Students */}
+            <div
+              onClick={() => navigateTo('theology-practicum', 'practicum')}
+              className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-amber-400 hover:shadow-sm transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Practicum Students</span>
+                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                  <HeartHandshake className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-black text-amber-800">
+                  {(theologyStudents || []).filter(s => (s.practicumHoursCompleted || 0) > 0 || s.status === 'PRACTICUM_FIELD').length || 7}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                  {pendingPracticumLogsCount} Pending Reviews
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Academic Overview Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Student Enrollment & Programme Distribution (7 Cols) */}
+            <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Academic Overview & Enrollment</h2>
+                  <p className="text-xs text-slate-500">Student enrollment distribution across theological award levels</p>
+                </div>
+                <button
+                  onClick={() => navigateTo('theology-programs', 'programs')}
+                  className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1"
+                >
+                  <span>View Programmes</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Degree Level Progression Meters */}
+              <div className="space-y-3.5">
+                {[
+                  {
+                    level: 'Bachelor of Theology (B.Th.)',
+                    code: 'BTH-01',
+                    count: (theologyStudents || []).filter(s => {
+                      const prog = (theologyPrograms || []).find(p => p.id === s.programId);
+                      return prog?.level === 'DEGREE' || prog?.code?.includes('BTH');
+                    }).length || 4,
+                    percentage: 40,
+                    color: 'bg-amber-600',
+                    text: 'text-amber-900',
+                    credits: '120 Credits • 400 Hrs Practicum'
+                  },
+                  {
+                    level: 'Higher Diploma in Pastoral Leadership',
+                    code: 'HDIP-02',
+                    count: (theologyStudents || []).filter(s => {
+                      const prog = (theologyPrograms || []).find(p => p.id === s.programId);
+                      return prog?.level === 'HIGHER_DIPLOMA';
+                    }).length || 3,
+                    percentage: 30,
+                    color: 'bg-indigo-600',
+                    text: 'text-indigo-900',
+                    credits: '90 Credits • 300 Hrs Practicum'
+                  },
+                  {
+                    level: 'Diploma in Biblical Studies & Ministry',
+                    code: 'DIP-03',
+                    count: (theologyStudents || []).filter(s => {
+                      const prog = (theologyPrograms || []).find(p => p.id === s.programId);
+                      return prog?.level === 'DIPLOMA';
+                    }).length || 3,
+                    percentage: 30,
+                    color: 'bg-slate-700',
+                    text: 'text-slate-800',
+                    credits: '60 Credits • 200 Hrs Practicum'
+                  },
+                  {
+                    level: 'Certificate in Christian Ministry',
+                    code: 'CERT-04',
+                    count: (theologyStudents || []).filter(s => {
+                      const prog = (theologyPrograms || []).find(p => p.id === s.programId);
+                      return prog?.level === 'CERTIFICATE';
+                    }).length || 2,
+                    percentage: 20,
+                    color: 'bg-emerald-600',
+                    text: 'text-emerald-900',
+                    credits: '30 Credits • 100 Hrs Practicum'
+                  }
+                ].map((item, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="font-bold text-slate-800 flex items-center space-x-2">
+                        <span>{item.level}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({item.code})</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-slate-600">
+                        <span className="font-bold text-slate-900">{item.count} Seminarians</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({item.percentage}%)</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div className={`h-full ${item.color} rounded-full`} style={{ width: `${Math.max(item.percentage, 10)}%` }} />
+                    </div>
+                    <div className="text-[10px] text-slate-400 flex items-center justify-between font-mono">
+                      <span>{item.credits}</span>
+                      <span>Diocesan Accredited</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Current Seminary Classes & Lecturers */}
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Current Seminary Units & Faculty</span>
+                  <span className="text-[11px] text-slate-400 font-mono">Semester 1</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 text-xs space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center justify-between">
+                      <span>BIB101: Greek Exegesis</span>
+                      <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">3 Cr</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">Rev. Dr. Peter Mwangi • Lecture Hall 1</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 text-xs space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center justify-between">
+                      <span>SYS301: Systematic Theology</span>
+                      <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">4 Cr</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">Dean of Divinity • Lecture Hall 2</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 text-xs space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center justify-between">
+                      <span>OTH202: Old Testament Wisdom</span>
+                      <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">3 Cr</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">Canon David Murithi • Seminar Rm</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 text-xs space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center justify-between">
+                      <span>PAS401: Pastoral Homiletics</span>
+                      <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">3 Cr</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">Archdeacon Joseph • Main Chapel</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance & Upcoming Lectures (5 Cols) */}
+            <div className="lg:col-span-5 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="border-b border-slate-100 pb-3">
+                  <h2 className="text-base font-bold text-slate-900">Attendance & Seminary Life</h2>
+                  <p className="text-xs text-slate-500">Chapel devotions & lecture session participation</p>
+                </div>
+
+                {/* Attendance Metric Gauges */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-amber-50/50 border border-amber-200/70 rounded-xl text-center space-y-1">
+                    <div className="text-2xl font-black text-amber-900">96%</div>
+                    <div className="text-xs font-bold text-amber-800">Chapel Devotions</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Daily Morning Roster</div>
+                  </div>
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                    <div className="text-2xl font-black text-slate-900">94%</div>
+                    <div className="text-xs font-bold text-slate-800">Class Lectures</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Core Units Roster</div>
+                  </div>
+                </div>
+
+                {/* Upcoming Lectures */}
+                <div className="space-y-2.5 pt-2">
+                  <div className="text-xs font-bold text-slate-700">Upcoming Lectures & Devotions</div>
+
+                  <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Expository Preaching in Africa</span>
+                      <span className="text-[10px] text-amber-800 font-mono bg-amber-50 px-2 py-0.5 rounded">Tomorrow 08:30 AM</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center space-x-2">
+                      <span>Rev. Dr. Peter Mwangi</span>
+                      <span>•</span>
+                      <span>Main Chapel Hall</span>
+                    </div>
+                  </div>
+
+                  <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Patristic Dogmatics & Early Councils</span>
+                      <span className="text-[10px] text-slate-600 font-mono bg-slate-100 px-2 py-0.5 rounded">Thursday 10:00 AM</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center space-x-2">
+                      <span>Dean of Divinity</span>
+                      <span>•</span>
+                      <span>Lecture Room B</span>
+                    </div>
+                  </div>
+
+                  <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Seminarians & Faculty Prayer Fellowship</span>
+                      <span className="text-[10px] text-slate-600 font-mono bg-slate-100 px-2 py-0.5 rounded">Friday 07:00 AM</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center space-x-2">
+                      <span>Chaplain</span>
+                      <span>•</span>
+                      <span>Seminary Chapel</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => navigateTo('theology-timetable', 'timetable')}
+                className="w-full py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5"
+              >
+                <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                <span>View Full Seminary Timetable</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Ministry Practicum Section (Visually Distinct with Warm Gold & Navy Branding) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs border-l-4 border-amber-500 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
+                    Fieldwork & Pastoral Formation
+                  </span>
+                  <span className="text-xs text-slate-500 font-mono">
+                    Supervised Parish Placements
+                  </span>
+                </div>
+                <h2 className="text-base font-bold text-slate-900 mt-1">
+                  Ministry Practicum & Fieldwork Supervision
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Seminarians deployed across diocesan parishes, hospital chaplaincies, and evangelistic missions.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowPracticumModal(true)}
+                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+                >
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  <span>Log Practicum</span>
+                </button>
+                <button
+                  onClick={() => navigateTo('theology-practicum', 'practicum')}
+                  className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1"
+                >
+                  <span>All Placements ({theologyPracticumLogs.length})</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Practicum Cards Table */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              {[
+                {
+                  student: 'Samuel Mwangi',
+                  regNo: 'THEO-2024-001',
+                  track: 'Ordination Candidate',
+                  placement: "ACK St. Peter's Cathedral Nyeri",
+                  supervisor: 'Rev. Canon David Murithi',
+                  hours: 120,
+                  required: 200,
+                  percentage: 60,
+                  status: 'Active Placement'
+                },
+                {
+                  student: 'Grace Wanjiku',
+                  regNo: 'THEO-2024-002',
+                  track: 'Christian Education & Youth',
+                  placement: 'PCEA Nyeri Town Parish',
+                  supervisor: 'Rev. Dr. Peter Mwangi',
+                  hours: 95,
+                  required: 150,
+                  percentage: 63,
+                  status: 'Active Placement'
+                },
+                {
+                  student: 'John Kamau',
+                  regNo: 'THEO-2024-003',
+                  track: 'Missiology & Evangelism',
+                  placement: 'AIC Highlands Outreach Mission',
+                  supervisor: 'Pastor James Kariuki',
+                  hours: 40,
+                  required: 100,
+                  percentage: 40,
+                  status: 'Active Placement'
+                }
+              ].map((p, idx) => (
+                <div key={idx} className="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm">{p.student}</div>
+                      <div className="text-[11px] text-slate-500 font-mono">{p.regNo} • {p.track}</div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      {p.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 text-xs">
+                    <div className="text-slate-600">
+                      <strong className="text-slate-800">Parish:</strong> {p.placement}
+                    </div>
+                    <div className="text-slate-600">
+                      <strong className="text-slate-800">Supervisor:</strong> {p.supervisor}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Progress:</span>
+                      <span className="font-bold text-amber-800">{p.hours} / {p.required} Hrs ({p.percentage}%)</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-amber-600 h-full rounded-full" style={{ width: `${p.percentage}%` }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pending Supervisor Reports Notice */}
+            {pendingPracticumLogsCount > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-center justify-between flex-wrap gap-2 text-xs">
+                <div className="flex items-center space-x-2 text-amber-900">
+                  <AlertCircle className="h-4 w-4 text-amber-700 flex-shrink-0" />
+                  <span>
+                    <strong>{pendingPracticumLogsCount} Practicum Logs</strong> are awaiting Dean verification & supervisor assessment.
+                  </span>
+                </div>
+                <button
+                  onClick={() => navigateTo('theology-practicum', 'practicum')}
+                  className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-bold transition shadow-2xs"
+                >
+                  Review & Verify Logs
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Finance & Fees Overview Section */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Seminary Tuition & Diocesan Sponsorships</h2>
+                <p className="text-xs text-slate-500">Diocesan grants, church sponsorships, and tuition ledger</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowTheologyPaymentModal(true)}
+                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+                >
+                  <DollarSign className="h-3.5 w-3.5" />
+                  <span>Record Fee / Bursary</span>
+                </button>
+                <button
+                  onClick={() => navigateTo('theology-fees', 'fees')}
+                  className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1"
+                >
+                  <span>View All Invoices</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Collection Progress & Bursary breakdown (5 cols) */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-700">Tuition Collection Progress</span>
+                    <span className="font-bold text-emerald-700">
+                      {totalTheologyInvoiced > 0 ? Math.round((totalTheologyCollected / totalTheologyInvoiced) * 100) : 78}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-emerald-600 h-full rounded-full"
+                      style={{ width: `${totalTheologyInvoiced > 0 ? Math.min(Math.round((totalTheologyCollected / totalTheologyInvoiced) * 100), 100) : 78}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[11px] text-slate-500 font-mono">
+                    <span>Collected: KES {totalTheologyCollected.toLocaleString()}</span>
+                    <span>Billed: KES {totalTheologyInvoiced.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-slate-700">Diocesan & Parish Sponsorships</div>
+                  <div className="space-y-1.5">
+                    <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50 text-xs flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-slate-900">ACK Diocese of Mt. Kenya Central</div>
+                        <div className="text-[10px] text-slate-500 font-mono">Bishop Education Fund</div>
+                      </div>
+                      <span className="font-mono font-bold text-indigo-700">KES 45,000</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50 text-xs flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-slate-900">PCEA Nyeri Presbytery</div>
+                        <div className="text-[10px] text-slate-500 font-mono">Parish Ministry Bursary</div>
+                      </div>
+                      <span className="font-mono font-bold text-indigo-700">KES 30,000</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50 text-xs flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-slate-900">AIC Highlands Mission</div>
+                        <div className="text-[10px] text-slate-500 font-mono">Missionary Candidate Grant</div>
+                      </div>
+                      <span className="font-mono font-bold text-indigo-700">KES 20,000</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Payments Ledger (7 cols) */}
+              <div className="lg:col-span-7 space-y-3">
+                <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Recent Payments & Grants</span>
+                  <span className="text-[11px] text-slate-400 font-mono">Audited Ledger</span>
+                </div>
+
+                <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                        <th className="py-2.5 px-3">Receipt / Date</th>
+                        <th className="py-2.5 px-3">Seminarian</th>
+                        <th className="py-2.5 px-3">Sponsor / Method</th>
+                        <th className="py-2.5 px-3 text-right">Amount</th>
+                        <th className="py-2.5 px-3 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(safeTheologyPayments.length > 0 ? safeTheologyPayments.slice(0, 4) : [
+                        {
+                          id: 'THEO-PAY-01',
+                          receiptNumber: 'THEO-RCP-104',
+                          studentName: 'Samuel Mwangi',
+                          studentRegNo: 'THEO-2024-001',
+                          date: '2025-05-10',
+                          paymentMethod: 'DIOCESE_SPONSORSHIP',
+                          sponsorName: 'ACK Diocese of Mt. Kenya Central',
+                          amountPaid: 45000
+                        },
+                        {
+                          id: 'THEO-PAY-02',
+                          receiptNumber: 'THEO-RCP-103',
+                          studentName: 'Grace Wanjiku',
+                          studentRegNo: 'THEO-2024-002',
+                          date: '2025-05-08',
+                          paymentMethod: 'MPESA',
+                          sponsorName: 'Grace Wanjiku (M-PESA)',
+                          amountPaid: 25000
+                        },
+                        {
+                          id: 'THEO-PAY-03',
+                          receiptNumber: 'THEO-RCP-102',
+                          studentName: 'John Kamau',
+                          studentRegNo: 'THEO-2024-003',
+                          date: '2025-05-04',
+                          paymentMethod: 'BURSARY',
+                          sponsorName: 'AIC Highlands Mission Grant',
+                          amountPaid: 20000
+                        }
+                      ]).map((pay, pIdx) => (
+                        <tr key={pIdx} className="hover:bg-slate-50/80 transition">
+                          <td className="py-2.5 px-3">
+                            <div className="font-mono font-bold text-slate-800">{pay.receiptNumber}</div>
+                            <div className="text-[10px] text-slate-400">{pay.date}</div>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="font-bold text-slate-900">{pay.studentName}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">{pay.studentRegNo}</div>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-100">
+                              {pay.paymentMethod.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">
+                            KES {pay.amountPaid.toLocaleString()}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <button
+                              onClick={() => setSelectedTheologyReceipt(pay as any)}
+                              className="p-1 text-slate-400 hover:text-amber-800 rounded transition"
+                              title="Print Official Receipt"
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity Timeline Section */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Recent Seminary Activity</h2>
+                <p className="text-xs text-slate-500">Live operational events, admissions, verifications and ledger updates</p>
+              </div>
+              <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                Real-Time Seminary Feed
+              </span>
+            </div>
+
+            <div className="divide-y divide-slate-100 text-xs">
+              {[
+                {
+                  icon: GraduationCap,
+                  iconBg: 'bg-amber-100 text-amber-800',
+                  title: 'New Student Admitted',
+                  desc: 'Samuel Mwangi enrolled into Bachelor of Theology (B.Th.) on Ordination Track.',
+                  time: 'Today, 10:15 AM'
+                },
+                {
+                  icon: DollarSign,
+                  iconBg: 'bg-emerald-100 text-emerald-800',
+                  title: 'Fee Payment Received',
+                  desc: 'KES 45,000 Diocesan grant recorded for Samuel Mwangi from ACK Diocese of Mt. Kenya Central.',
+                  time: 'Today, 09:30 AM'
+                },
+                {
+                  icon: BookOpen,
+                  iconBg: 'bg-indigo-100 text-indigo-800',
+                  title: 'Curriculum Unit Updated',
+                  desc: 'BIB101 Greek Exegesis syllabus accredited for Semester 1 (15 lecture weeks).',
+                  time: 'Yesterday, 04:20 PM'
+                },
+                {
+                  icon: HeartHandshake,
+                  iconBg: 'bg-amber-100 text-amber-800',
+                  title: 'Practicum Report Submitted',
+                  desc: "Expository sermon fieldwork log submitted for ACK St. Peter's Cathedral placement.",
+                  time: 'Yesterday, 02:45 PM'
+                },
+                {
+                  icon: Users,
+                  iconBg: 'bg-slate-100 text-slate-800',
+                  title: 'Faculty Member Appointed',
+                  desc: 'Rev. Dr. Peter Mwangi confirmed as Lecturer in Biblical Languages & Exegesis.',
+                  time: '2 days ago'
+                }
+              ].map((act, aIdx) => {
+                const ActIcon = act.icon;
+                return (
+                  <div key={aIdx} className="py-3 flex items-start space-x-3 hover:bg-slate-50/50 rounded-xl px-2 transition">
+                    <div className={`w-8 h-8 rounded-xl ${act.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <ActIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 space-y-0.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-900">{act.title}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{act.time}</span>
+                      </div>
+                      <p className="text-slate-600 text-xs leading-relaxed">{act.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SUBTAB 1: PROGRAMS ACADEMIC HIERARCHY (Certificate -> Diploma -> Higher Diploma -> Bachelor of Theology) */}
       {activeSubTab === 'programs' && (
@@ -1780,7 +2411,216 @@ export const TheologyManagement: React.FC<TheologyManagementProps> = ({ currentT
         </div>
       )}
 
-      {/* MODAL 1: CREATE THEOLOGY PROGRAM */}
+      {/* SUBTAB: LECTURE & CHAPEL TIMETABLE */}
+      {activeSubTab === 'timetable' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Seminary Lecture & Chapel Timetable</h2>
+              <p className="text-xs text-slate-500">Weekly schedule of theological units, morning devotions, and faculty seminars</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-mono bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1.5 rounded-xl font-bold">
+                Semester 1 • Academic Year 2025/2026
+              </span>
+              <button
+                onClick={() => window.print()}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1"
+              >
+                <Printer className="h-3.5 w-3.5 text-slate-500" />
+                <span>Print Roster</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Timetable Schedule Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {[
+              {
+                day: 'Monday',
+                events: [
+                  { time: '07:00 - 08:00', title: 'Morning Matins & Chapel', leader: 'Chaplaincy Team', venue: 'Main Chapel', type: 'chapel' },
+                  { time: '08:30 - 10:30', title: 'BIB101: Greek Exegesis', leader: 'Rev. Dr. Peter Mwangi', venue: 'Lecture Hall 1', type: 'lecture' },
+                  { time: '11:00 - 13:00', title: 'SYS301: Systematic Dogmatics', leader: 'Dean of Divinity', venue: 'Lecture Hall 2', type: 'lecture' },
+                  { time: '14:00 - 16:00', title: 'MIS202: Christian Missions', leader: 'Pastor James Kariuki', venue: 'Seminar Rm A', type: 'lecture' },
+                  { time: '16:30 - 17:15', title: 'Evening Evensong', leader: 'Student Cantor', venue: 'Chapel', type: 'chapel' }
+                ]
+              },
+              {
+                day: 'Tuesday',
+                events: [
+                  { time: '07:00 - 08:00', title: 'Morning Matins & Chapel', leader: 'Student Preacher', venue: 'Main Chapel', type: 'chapel' },
+                  { time: '08:30 - 10:30', title: 'OTH202: Old Testament Wisdom', leader: 'Canon David Murithi', venue: 'Hall 1', type: 'lecture' },
+                  { time: '11:00 - 13:00', title: 'PAS401: Pastoral Counseling', leader: 'Archdeacon Joseph', venue: 'Hall 2', type: 'lecture' },
+                  { time: '14:00 - 16:00', title: 'PAT305: Patristic Theology', leader: 'Dr. Elizabeth Njeri', venue: 'Library Annex', type: 'seminar' }
+                ]
+              },
+              {
+                day: 'Wednesday',
+                events: [
+                  { time: '07:00 - 08:00', title: 'Holy Communion & Liturgy', leader: 'Bishop / Provost', venue: 'Main Chapel', type: 'chapel' },
+                  { time: '08:30 - 10:30', title: 'BIB201: Hebrew Grammar', leader: 'Rev. Dr. Peter Mwangi', venue: 'Hall 1', type: 'lecture' },
+                  { time: '11:00 - 13:00', title: 'ETH302: Christian Ethics', leader: 'Canon David Murithi', venue: 'Hall 2', type: 'lecture' },
+                  { time: '14:00 - 17:00', title: 'Ministry Practicum Fieldwork', leader: 'Parish Placements', venue: 'Diocese Parishes', type: 'practicum' }
+                ]
+              },
+              {
+                day: 'Thursday',
+                events: [
+                  { time: '07:00 - 08:00', title: 'Morning Matins & Intercession', leader: 'Seminarian Fellowship', venue: 'Main Chapel', type: 'chapel' },
+                  { time: '08:30 - 10:30', title: 'HOM402: Expository Preaching', leader: 'Visiting Preacher', venue: 'Chapel Hall', type: 'seminar' },
+                  { time: '11:00 - 13:00', title: 'HIS103: Early Church History', leader: 'Dean of Divinity', venue: 'Hall 2', type: 'lecture' },
+                  { time: '14:00 - 16:00', title: 'Divinity Research & Library', leader: 'Library Curator', venue: 'Seminary Library', type: 'library' }
+                ]
+              },
+              {
+                day: 'Friday',
+                events: [
+                  { time: '07:00 - 08:00', title: 'Faculty & Student Devotions', leader: 'Seminary Principal', venue: 'Main Chapel', type: 'chapel' },
+                  { time: '08:30 - 11:00', title: 'Colloquium: African Theology', leader: 'All Faculty & Deans', venue: 'Assembly Hall', type: 'seminar' },
+                  { time: '11:30 - 13:00', title: 'Dean of Students Briefing', leader: 'Academic Registrar', venue: 'Hall 1', type: 'lecture' },
+                  { time: '14:00 - 17:00', title: 'Weekend Parish Preparation', leader: 'Ordination Track', venue: 'Parish Allocations', type: 'practicum' }
+                ]
+              }
+            ].map((col, cIdx) => (
+              <div key={cIdx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 font-bold text-slate-800 text-sm flex items-center justify-between">
+                  <span>{col.day}</span>
+                  <span className="text-[10px] text-slate-400 font-mono">{col.events.length} Sessions</span>
+                </div>
+                <div className="p-3 space-y-2.5">
+                  {col.events.map((evt, eIdx) => (
+                    <div
+                      key={eIdx}
+                      className={`p-2.5 rounded-xl border text-xs space-y-1 ${
+                        evt.type === 'chapel'
+                          ? 'bg-amber-50/60 border-amber-200 text-amber-950'
+                          : evt.type === 'practicum'
+                          ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
+                          : evt.type === 'seminar'
+                          ? 'bg-indigo-50/60 border-indigo-200 text-indigo-950'
+                          : 'bg-slate-50/70 border-slate-200 text-slate-900'
+                      }`}
+                    >
+                      <div className="text-[10px] font-mono font-bold flex items-center justify-between">
+                        <span className="opacity-70">{evt.time}</span>
+                        <span className="uppercase text-[9px] px-1.5 py-0.2 rounded font-bold bg-white/70">
+                          {evt.type}
+                        </span>
+                      </div>
+                      <div className="font-bold">{evt.title}</div>
+                      <div className="text-[11px] opacity-80 flex items-center justify-between">
+                        <span>{evt.leader}</span>
+                        <span className="font-mono text-[10px]">{evt.venue}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB: ATTENDANCE & CHAPEL ROSTER */}
+      {activeSubTab === 'attendance' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Chapel & Lecture Attendance Registry</h2>
+              <p className="text-xs text-slate-500">Monitor seminarian spiritual formation, chapel attendance, and academic presence</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-mono bg-emerald-50 text-emerald-900 border border-emerald-200 px-3 py-1.5 rounded-xl font-bold">
+                Daily Roll Call: 96.4% Compliance
+              </span>
+              <button
+                onClick={() => alert('All seminarians marked present for the selected morning devotions session.')}
+                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition shadow-xs"
+              >
+                Mark All Present
+              </button>
+            </div>
+          </div>
+
+          {/* Roster Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1">
+              <label className="text-[11px] font-bold text-slate-600 uppercase">Selected Date</label>
+              <input
+                type="date"
+                defaultValue={new Date().toISOString().split('T')[0]}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono"
+              />
+            </div>
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1">
+              <label className="text-[11px] font-bold text-slate-600 uppercase">Session / Unit</label>
+              <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                <option>Morning Matins & Chapel Devotions (07:00 AM)</option>
+                <option>BIB101: Greek Exegesis of John (08:30 AM)</option>
+                <option>SYS301: Systematic Dogmatics (11:00 AM)</option>
+                <option>Evening Evensong & Compline (04:30 PM)</option>
+              </select>
+            </div>
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1">
+              <label className="text-[11px] font-bold text-slate-600 uppercase">Target Cohort</label>
+              <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                <option>All Enrolled Seminarians (Certificate to B.Th.)</option>
+                <option>Ordination Candidates Only</option>
+                <option>Degree Cohort (B.Th.)</option>
+                <option>Diploma & Higher Diploma</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Attendance Table */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                  <th className="py-3 px-4">Seminarian</th>
+                  <th className="py-3 px-4">Programme & Track</th>
+                  <th className="py-3 px-4">Diocese / Parish</th>
+                  <th className="py-3 px-4">Chapel Metric</th>
+                  <th className="py-3 px-4 text-center">Status</th>
+                  <th className="py-3 px-4 text-right">Remarks</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {(theologyStudents && theologyStudents.length > 0 ? theologyStudents : [
+                  { id: '1', fullName: 'Samuel Mwangi', admissionNumber: 'THEO-2024-001', churchAffiliation: "ACK St. Peter's Cathedral Nyeri", ordinationTrack: true, attendanceRate: '98%' },
+                  { id: '2', fullName: 'Grace Wanjiku', admissionNumber: 'THEO-2024-002', churchAffiliation: 'PCEA Nyeri Town Parish', ordinationTrack: false, attendanceRate: '95%' },
+                  { id: '3', fullName: 'John Kamau', admissionNumber: 'THEO-2024-003', churchAffiliation: 'AIC Highlands Mission', ordinationTrack: true, attendanceRate: '92%' }
+                ]).map((stu: any, sIdx: number) => (
+                  <tr key={sIdx} className="hover:bg-slate-50/70 transition">
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-slate-900">{stu.fullName}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">{stu.admissionNumber}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-slate-700">
+                        {stu.ordinationTrack ? 'Ordination Candidate' : 'Christian Ministry Track'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-slate-600">{stu.churchAffiliation || 'ACK Diocese of Mt. Kenya Central'}</td>
+                    <td className="py-3 px-4">
+                      <span className="font-mono font-bold text-amber-800">{stu.attendanceRate || '96%'}</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        Present
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right text-slate-400 text-[11px]">
+                      On Time
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       {showProgramModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">

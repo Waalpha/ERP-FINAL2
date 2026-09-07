@@ -98,7 +98,7 @@ export const TenantRouter: React.FC<TenantRouterProps> = ({
 
   // Strict Tenant Type Isolation
   if (tType === 'THEOLOGICAL') {
-    return <TheologyManagement currentTab={currentTab} />;
+    return <TheologyManagement currentTab={currentTab} onNavigateTab={onNavigateTab} />;
   }
 
   if (tType === 'COLLEGE') {
