@@ -24,7 +24,11 @@ import {
   Award,
   UserCheck,
   Globe,
-  Activity
+  Activity,
+  Compass,
+  Scroll,
+  Church,
+  DollarSign
 } from 'lucide-react';
 
 export interface NavItem {
@@ -117,19 +121,52 @@ export function getNavigationForTenant(tenant: Tenant): NavSection[] {
     case 'THEOLOGICAL':
       return [
         {
-          title: 'SEMINARY CORE',
+          title: 'SEMINARY',
           items: [
-            { id: 'theology-overview', label: 'Seminary Dashboard', icon: BookOpen },
-            { id: 'theology-programs', label: 'Degree Programs & Units', icon: BookA },
-            { id: 'theology-students', label: 'Divinity Students', icon: Users },
-            { id: 'theology-practicum', label: 'Ministry Practicum Logs', icon: Sparkles },
+            { id: 'theology-overview', label: 'Dashboard', icon: BookOpen },
+            { id: 'theology-students', label: 'Students', icon: Users },
+            { id: 'theology-admissions', label: 'Admissions', icon: UserCheck },
+            { id: 'theology-programs', label: 'Academic Programmes', icon: BookA },
+            { id: 'theology-courses', label: 'Courses & Units', icon: Layers },
+            { id: 'theology-timetable', label: 'Timetable', icon: Calendar },
+            { id: 'theology-attendance', label: 'Attendance', icon: CheckCircle2 }
+          ]
+        },
+        {
+          title: 'MINISTRY',
+          items: [
+            { id: 'theology-practicum', label: 'Ministry Practicum', icon: Sparkles },
+            { id: 'theology-pastoral', label: 'Pastoral Training', icon: Compass },
+            { id: 'theology-sermons', label: 'Sermon & Teaching Records', icon: Scroll },
+            { id: 'theology-placements', label: 'Church Placements', icon: Church },
+            { id: 'theology-supervisor-reports', label: 'Supervisor Reports', icon: FileText }
+          ]
+        },
+        {
+          title: 'LIBRARY',
+          items: [
             { id: 'theology-library', label: 'Theological Library', icon: Library },
-            { id: 'theology-fees', label: 'Invoicing & Tithing', icon: Receipt },
-            { id: 'staff-directory', label: 'Faculty & Staff Directory', icon: Users },
-            { id: 'tenant-website-cms', label: 'Website / CMS', icon: Globe },
-            { id: 'system-administration', label: 'System Administration', icon: Shield },
-            { id: 'theology-reports', label: 'Seminary Reports', icon: FileText },
+            { id: 'theology-books', label: 'Books & Resources', icon: BookOpen },
+            { id: 'theology-research', label: 'Student Research', icon: Award }
+          ]
+        },
+        {
+          title: 'FINANCE',
+          items: [
+            { id: 'theology-fees', label: 'Fees & Invoicing', icon: Receipt },
+            { id: 'theology-payments', label: 'Payments', icon: CreditCard },
+            { id: 'theology-sponsorships', label: 'Sponsorships / Bursaries', icon: DollarSign },
+            { id: 'theology-financial-reports', label: 'Financial Reports', icon: FileText }
+          ]
+        },
+        {
+          title: 'ADMINISTRATION',
+          items: [
+            { id: 'staff-directory', label: 'Faculty & Staff', icon: Users },
             { id: 'theology-sms', label: 'Communication / SMS', icon: Bell },
+            { id: 'tenant-website-cms', label: 'Website / CMS', icon: Globe },
+            { id: 'theology-reports', label: 'Reports', icon: FileText },
+            { id: 'system-administration', label: 'System Administration', icon: Shield },
             { id: 'theology-settings', label: 'Seminary Settings', icon: Settings }
           ]
         }
