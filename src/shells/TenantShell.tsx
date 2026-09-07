@@ -184,14 +184,17 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans antialiased text-slate-900 selection:bg-indigo-500 selection:text-white">
-      {/* Professional Customer-Facing Tenant Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      {/* Professional Customer-Facing Tenant Header - Premium Blue Navbar */}
+      <header
+        className="sticky top-0 z-30 shadow-md border-b border-[#1E4D7A]/80 text-white"
+        style={{ background: 'linear-gradient(90deg, #0B2A4A 0%, #123F68 100%)' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
           {/* Tenant Brand Identity: Logo + Name + Type */}
           <div className="flex items-center space-x-3 min-w-0">
             <button
               onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
-              className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl"
+              className="lg:hidden p-2 text-[#DCEBFA] hover:text-white hover:bg-white/10 rounded-xl transition duration-150"
               aria-label="Toggle navigation"
             >
               {isMobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -203,38 +206,38 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
                 src={tenant.logoUrl}
                 alt={tenant.name}
                 referrerPolicy="no-referrer"
-                className={`h-10 w-10 rounded-xl object-contain border ${tType === 'THEOLOGICAL' ? 'border-amber-500/40 ring-1 ring-amber-500/20' : 'border-slate-200'} bg-white p-0.5 shadow-xs flex-shrink-0`}
+                className={`h-10 w-10 rounded-xl object-contain border ${tType === 'THEOLOGICAL' ? 'border-amber-400/40 ring-1 ring-amber-400/25' : 'border-white/20'} bg-white p-0.5 shadow-sm flex-shrink-0`}
               />
             ) : (
               <div
-                className={`h-10 w-10 rounded-xl ${tType === 'THEOLOGICAL' ? 'bg-slate-900 border border-amber-500/40 text-amber-400' : 'bg-indigo-600 border border-indigo-500 text-white'} flex items-center justify-center font-black text-lg flex-shrink-0 shadow-xs`}
+                className={`h-10 w-10 rounded-xl ${tType === 'THEOLOGICAL' ? 'bg-[#06182B] border border-amber-400/40 text-amber-300' : 'bg-white/15 border border-white/20 text-white'} flex items-center justify-center font-black text-lg flex-shrink-0 shadow-sm`}
                 style={tenant.primaryColor && tType !== 'THEOLOGICAL' ? { backgroundColor: tenant.primaryColor } : undefined}
               >
-                {tType === 'THEOLOGICAL' ? <Church className="w-5 h-5 text-amber-400" /> : tenant.name.charAt(0)}
+                {tType === 'THEOLOGICAL' ? <Church className="w-5 h-5 text-amber-300" /> : tenant.name.charAt(0)}
               </div>
             )}
 
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate tracking-tight">
+                <h1 className="text-base sm:text-lg font-bold text-white truncate tracking-tight">
                   {tenant.name}
                 </h1>
                 {tType === 'THEOLOGICAL' ? (
-                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-amber-300 border border-amber-500/30 shadow-2xs">
+                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-white/10 text-amber-300 border border-amber-400/30 shadow-2xs">
                     Theological Seminary
                   </span>
                 ) : (
-                  <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                  <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-white/10 text-[#C9D9E8] border border-white/20">
                     {tenant.type.replace(/_/g, ' ')}
                   </span>
                 )}
               </div>
-              <div className="flex items-center space-x-2 text-xs text-slate-500">
-                <span className={tType === 'THEOLOGICAL' ? 'text-amber-800 font-medium' : 'text-indigo-600 font-semibold'}>
+              <div className="flex items-center space-x-2 text-xs text-[#C9D9E8]">
+                <span className={tType === 'THEOLOGICAL' ? 'text-amber-300/90 font-medium' : 'text-[#DCEBFA] font-medium'}>
                   {tenant.subdomain}.{MAIN_DOMAIN_SUFFIX}
                 </span>
                 {tenant.motto && (
-                  <span className="hidden sm:inline text-slate-400 truncate">
+                  <span className="hidden sm:inline text-white/60 truncate">
                     • &ldquo;{tenant.motto}&rdquo;
                   </span>
                 )}
@@ -246,7 +249,7 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
           <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             {/* Scoped Search Input */}
             <div className="relative hidden md:block w-56 lg:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-[#DCEBFA] absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder={tType === 'THEOLOGICAL' ? 'Search seminarians, units...' : `Search ${tenant.name}...`}
@@ -256,12 +259,12 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
                   setIsSearchOpen(true);
                 }}
                 onFocus={() => setIsSearchOpen(true)}
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500 transition"
+                className="w-full pl-9 pr-3 py-1.5 bg-white/10 hover:bg-white/15 focus:bg-white/20 border border-white/20 rounded-xl text-xs text-white placeholder-[#B8C9D9] focus:outline-none focus:ring-1 focus:ring-white/40 transition duration-150"
               />
 
               {/* Search Dropdown */}
               {isSearchOpen && searchResults.length > 0 && (
-                <div className="absolute top-10 left-0 right-0 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 z-50 space-y-1">
+                <div className="absolute top-10 left-0 right-0 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 z-50 space-y-1 text-slate-900">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 flex items-center justify-between">
                     <span>Seminary Records</span>
                     <button
@@ -294,17 +297,23 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
 
             {/* Academic Year / Term Selector (Theology & Educational Institutions) */}
             {(tType === 'THEOLOGICAL' || tType === 'COLLEGE' || tType === 'PRIMARY_SCHOOL') && (
-              <div className="hidden lg:flex items-center space-x-1 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
-                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+              <div className="hidden lg:flex items-center space-x-1 px-2.5 py-1.5 bg-white/10 border border-white/20 rounded-xl text-xs text-white">
+                <Calendar className="w-3.5 h-3.5 text-[#DCEBFA]" />
                 <select
                   value={selectedAcademicTerm}
                   onChange={(e) => setSelectedAcademicTerm(e.target.value)}
-                  className="bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer"
+                  className="bg-transparent font-medium text-xs text-white focus:outline-none cursor-pointer"
                   title="Active Academic Term"
                 >
-                  <option value="Semester 1">{selectedAcademicYear} • Semester 1</option>
-                  <option value="Semester 2">{selectedAcademicYear} • Semester 2</option>
-                  <option value="Fieldwork Term">{selectedAcademicYear} • Fieldwork Term</option>
+                  <option value="Semester 1" className="bg-[#0B2A4A] text-white">
+                    {selectedAcademicYear} • Semester 1
+                  </option>
+                  <option value="Semester 2" className="bg-[#0B2A4A] text-white">
+                    {selectedAcademicYear} • Semester 2
+                  </option>
+                  <option value="Fieldwork Term" className="bg-[#0B2A4A] text-white">
+                    {selectedAcademicYear} • Fieldwork Term
+                  </option>
                 </select>
               </div>
             )}
@@ -313,15 +322,15 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
             <div className="relative">
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+                className="relative p-2 text-[#DCEBFA] hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition duration-150"
                 title="Seminary Notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full ring-2 ring-white" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full ring-2 ring-[#0B2A4A]" />
               </button>
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 top-11 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 space-y-2">
+                <div className="absolute right-0 top-11 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 space-y-2 text-slate-900">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                     <span className="text-xs font-bold text-slate-900">Institutional Alerts</span>
                     <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
@@ -361,7 +370,7 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
             {/* Live Public Website Link */}
             <button
               onClick={() => setCurrentTab('public-website')}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl shadow-xs transition"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-white/95 hover:bg-white text-[#0B2A4A] border border-white/20 text-xs font-bold rounded-xl shadow-xs transition duration-150"
               title="Open Live Public Website"
             >
               <Globe className="w-3.5 h-3.5 text-emerald-600" />
@@ -372,24 +381,24 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
             <div className="relative">
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center space-x-2 p-1 sm:px-2.5 sm:py-1 hover:bg-slate-100 rounded-xl transition text-left"
+                className="flex items-center space-x-2 p-1 sm:px-2.5 sm:py-1 hover:bg-white/10 rounded-xl transition duration-150 text-left border border-transparent hover:border-white/15"
               >
-                <div className="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 font-bold flex items-center justify-center text-xs border border-amber-500/30">
+                <div className="w-7 h-7 rounded-lg bg-white/15 text-amber-300 font-bold flex items-center justify-center text-xs border border-white/20">
                   {user?.displayName ? user.displayName.charAt(0) : 'F'}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-slate-900 leading-none truncate max-w-[120px]">
+                  <div className="text-xs font-bold text-white leading-none truncate max-w-[120px]">
                     {user?.displayName || 'Faculty / Clergy'}
                   </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                  <div className="text-[10px] text-[#C9D9E8] mt-0.5 font-medium">
                     {tType === 'THEOLOGICAL' ? 'Dean of Studies' : user?.role}
                   </div>
                 </div>
-                <ChevronDown className="w-3 h-3 text-slate-400 hidden sm:block" />
+                <ChevronDown className="w-3 h-3 text-[#DCEBFA] hidden sm:block" />
               </button>
 
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-11 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 space-y-3">
+                <div className="absolute right-0 top-11 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 space-y-3 text-slate-900">
                   <div className="pb-2 border-b border-slate-100">
                     <div className="text-xs font-bold text-slate-900">{user?.displayName || 'Seminary Faculty'}</div>
                     <div className="text-[11px] text-slate-500 truncate">{user?.email || 'dean@injiricentre.ac.ke'}</div>
