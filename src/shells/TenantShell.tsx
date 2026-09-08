@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { TenantRouter } from './TenantRouter';
-import { Tenant } from '../types';
+import { Tenant, AppNotification, NotificationCategory } from '../types';
 import {
   Building2,
   GraduationCap,
@@ -36,10 +36,255 @@ import {
   LogOut,
   ChevronDown,
   Check,
-  Clock
+  Clock,
+  Plus,
+  Trash2,
+  CheckCheck,
+  AlertTriangle,
+  Send,
+  Info
 } from 'lucide-react';
 import { navigateToPlatform, MAIN_DOMAIN_SUFFIX } from '../services/TenantResolver';
 import { getNavigationForTenant, normalizeTenantType, NavSection } from '../services/ModuleRegistry';
+import { AddNotificationModal } from '../components/AddNotificationModal';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db, cleanFirestoreData } from '../firebase/config';
+
+function formatRelativeTime(dateStr: string): string {
+  try {
+    const time = new Date(dateStr).getTime();
+    if (isNaN(time)) return 'Recently';
+    const diff = Math.floor((Date.now() - time) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  } catch {
+    return 'Recently';
+  }
+}
+
+const getDefaultNotifications = (tenant: Tenant): AppNotification[] => {
+  const tType = normalizeTenantType(tenant.type);
+  if (tType === 'THEOLOGICAL') {
+    return [
+      {
+        id: 'notif_theo_1',
+        tenantId: tenant.id,
+        title: 'Practicum Log Submitted',
+        message: 'Samuel Mwangi logged 12 hrs at ACK Cathedral Nyeri for review.',
+        category: 'ACADEMIC',
+        priority: 'NORMAL',
+        targetAudience: 'STAFF',
+        timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Academic Registrar',
+        authorRole: 'STAFF'
+      },
+      {
+        id: 'notif_theo_2',
+        tenantId: tenant.id,
+        title: 'Diocesan Bursary Received',
+        message: 'KES 45,000 recorded from Diocese of Mt. Kenya Central for student aid.',
+        category: 'FINANCIAL',
+        priority: 'NORMAL',
+        targetAudience: 'MANAGEMENT',
+        timestamp: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Finance Bursar',
+        authorRole: 'ACCOUNTANT'
+      },
+      {
+        id: 'notif_theo_3',
+        tenantId: tenant.id,
+        title: 'Faculty Chapel Schedule',
+        message: 'Wednesday morning symposium and prayer timetable published in hall.',
+        category: 'ANNOUNCEMENT',
+        priority: 'LOW',
+        targetAudience: 'ALL',
+        timestamp: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+        isRead: true,
+        authorName: 'Chaplaincy',
+        authorRole: 'STAFF'
+      }
+    ];
+  }
+
+  if (tType === 'PRIMARY_SCHOOL' || tType === 'SECONDARY_SCHOOL') {
+    return [
+      {
+        id: 'notif_school_1',
+        tenantId: tenant.id,
+        title: 'CBC Assessment Scores Due',
+        message: 'All Grade 7 & 8 formative assessment scores must be submitted by Friday.',
+        category: 'ACADEMIC',
+        priority: 'HIGH',
+        targetAudience: 'STAFF',
+        timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Deputy Head Academic',
+        authorRole: 'TENANT_ADMIN'
+      },
+      {
+        id: 'notif_school_2',
+        tenantId: tenant.id,
+        title: 'M-Pesa Fee Batch Reconciled',
+        message: '24 automated fee payments totaling KES 148,000 verified against student accounts.',
+        category: 'FINANCIAL',
+        priority: 'NORMAL',
+        targetAudience: 'MANAGEMENT',
+        timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Accounts Office',
+        authorRole: 'ACCOUNTANT'
+      },
+      {
+        id: 'notif_school_3',
+        tenantId: tenant.id,
+        title: 'Inter-House Sports Gala',
+        message: 'Annual Athletics & Sports Day scheduled for next Saturday. Parents invited.',
+        category: 'ANNOUNCEMENT',
+        priority: 'LOW',
+        targetAudience: 'ALL',
+        timestamp: new Date(Date.now() - 22 * 3600 * 1000).toISOString(),
+        isRead: true,
+        authorName: 'Administration',
+        authorRole: 'STAFF'
+      }
+    ];
+  }
+
+  if (tType === 'HOSPITAL') {
+    return [
+      {
+        id: 'notif_hosp_1',
+        tenantId: tenant.id,
+        title: 'Emergency Triage Alert',
+        message: '3 priority trauma consultations queued in Outpatient Unit 2.',
+        category: 'ALERT',
+        priority: 'URGENT',
+        targetAudience: 'STAFF',
+        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Nursing Station',
+        authorRole: 'STAFF'
+      },
+      {
+        id: 'notif_hosp_2',
+        tenantId: tenant.id,
+        title: 'Pharmacy Restock Completed',
+        message: 'Amoxicillin and IV fluids stock replenished. 99.4% availability recorded.',
+        category: 'STOCK',
+        priority: 'NORMAL',
+        targetAudience: 'ALL',
+        timestamp: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Chief Pharmacist',
+        authorRole: 'STAFF'
+      },
+      {
+        id: 'notif_hosp_3',
+        tenantId: tenant.id,
+        title: 'NHIF / SHA Batch Clearance',
+        message: 'Weekly electronic claim batch submitted and approved for payout.',
+        category: 'FINANCIAL',
+        priority: 'NORMAL',
+        targetAudience: 'MANAGEMENT',
+        timestamp: new Date(Date.now() - 18 * 3600 * 1000).toISOString(),
+        isRead: true,
+        authorName: 'Billing Desk',
+        authorRole: 'ACCOUNTANT'
+      }
+    ];
+  }
+
+  if (tType === 'BUSINESS' || tType === 'RETAIL') {
+    return [
+      {
+        id: 'notif_ret_1',
+        tenantId: tenant.id,
+        title: 'Daily Sales Milestone Reached',
+        message: 'Cashier Till #1 exceeded target with KES 85,000 turnover today.',
+        category: 'FINANCIAL',
+        priority: 'NORMAL',
+        targetAudience: 'MANAGEMENT',
+        timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Store Supervisor',
+        authorRole: 'MANAGER'
+      },
+      {
+        id: 'notif_ret_2',
+        tenantId: tenant.id,
+        title: 'Low Stock Alert Triggered',
+        message: '3 inventory SKUs dropped below reorder threshold. Reorder list ready.',
+        category: 'STOCK',
+        priority: 'HIGH',
+        targetAudience: 'STAFF',
+        timestamp: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+        isRead: false,
+        authorName: 'Inventory System',
+        authorRole: 'SYSTEM'
+      },
+      {
+        id: 'notif_ret_3',
+        tenantId: tenant.id,
+        title: 'Weekend Promotion Launched',
+        message: 'Promotional discount tags active on selected beverage lines.',
+        category: 'ANNOUNCEMENT',
+        priority: 'LOW',
+        targetAudience: 'ALL',
+        timestamp: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
+        isRead: true,
+        authorName: 'Retail Operations',
+        authorRole: 'STAFF'
+      }
+    ];
+  }
+
+  // College / University fallback
+  return [
+    {
+      id: 'notif_univ_1',
+      tenantId: tenant.id,
+      title: 'Academic Senate Clearance',
+      message: 'Semester 1 provisional examination transcripts cleared for student portal access.',
+      category: 'ACADEMIC',
+      priority: 'HIGH',
+      targetAudience: 'ALL',
+      timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+      isRead: false,
+      authorName: 'Registrar Academic',
+      authorRole: 'TENANT_ADMIN'
+    },
+    {
+      id: 'notif_univ_2',
+      tenantId: tenant.id,
+      title: 'Fee Payment Deadline Notice',
+      message: 'Finance department deadline for exam card issuance is next Wednesday.',
+      category: 'FINANCIAL',
+      priority: 'NORMAL',
+      targetAudience: 'ALL',
+      timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+      isRead: false,
+      authorName: 'Finance Directorate',
+      authorRole: 'ACCOUNTANT'
+    },
+    {
+      id: 'notif_univ_3',
+      tenantId: tenant.id,
+      title: 'Campus Network Maintenance',
+      message: 'Scheduled fiber backbone upgrade completed with 99.99% cloud connectivity.',
+      category: 'OPERATIONS',
+      priority: 'LOW',
+      targetAudience: 'STAFF',
+      timestamp: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
+      isRead: true,
+      authorName: 'ICT Services',
+      authorRole: 'STAFF'
+    }
+  ];
+};
 
 interface TenantShellProps {
   tenant: Tenant;
@@ -64,7 +309,9 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
   const [currentTab, setCurrentTab] = useState<string>(() => {
     if (tType === 'COLLEGE') return 'college-overview';
     if (tType === 'THEOLOGICAL') return 'theology-overview';
-    if (tType === 'BUSINESS') return 'commerce-retail';
+    if (tType === 'BUSINESS') {
+      return 'commerce-pos';
+    }
     if (tType === 'HOSPITAL') return 'hospital-overview';
     return 'school-overview';
   });
@@ -76,6 +323,134 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(tenant.currentAcademicYear || '2025/2026');
   const [selectedAcademicTerm, setSelectedAcademicTerm] = useState(tenant.currentTerm || 'Semester 1');
+
+  // Dynamic notifications state & Firestore sync
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getDefaultNotifications(tenant));
+  const [isAddNotificationModalOpen, setIsAddNotificationModalOpen] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState<'ALL' | 'UNREAD' | 'ALERTS'>('ALL');
+  const [toast, setToast] = useState<{ id: string; type: 'success' | 'info' | 'warning'; title: string; message: string } | null>(null);
+
+  // Firestore synchronization for tenant notifications
+  useEffect(() => {
+    if (!tenant?.id) return;
+
+    try {
+      const notifCol = collection(db, 'tenants', tenant.id, 'notifications');
+      const q = query(notifCol, orderBy('timestamp', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const loaded: AppNotification[] = snapshot.docs.map((d) => d.data() as AppNotification);
+          setNotifications(loaded);
+        } else {
+          // Seed initial default notifications for this tenant
+          const defaults = getDefaultNotifications(tenant);
+          setNotifications(defaults);
+          defaults.forEach(async (n) => {
+            try {
+              await setDoc(doc(db, 'tenants', tenant.id, 'notifications', n.id), cleanFirestoreData(n));
+            } catch {}
+          });
+        }
+      }, (err) => {
+        console.warn('Firestore notifications listener fallback to local state:', err);
+      });
+
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Unable to subscribe to Firestore notifications:', err);
+    }
+  }, [tenant?.id]);
+
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // Notification action handlers
+  const handleAddNotification = async (newNotifData: Omit<AppNotification, 'id' | 'timestamp' | 'isRead'>) => {
+    const id = `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newNotif: AppNotification = {
+      ...newNotifData,
+      id,
+      timestamp: new Date().toISOString(),
+      isRead: false
+    };
+
+    setNotifications((prev) => [newNotif, ...prev]);
+
+    setToast({
+      id,
+      type: 'success',
+      title: 'Notification Broadcast',
+      message: `"${newNotif.title}" is now active for ${newNotif.targetAudience.toLowerCase()} members.`
+    });
+
+    try {
+      await setDoc(doc(db, 'tenants', tenant.id, 'notifications', id), cleanFirestoreData(newNotif));
+    } catch (err) {
+      console.error('Failed to persist notification:', err);
+    }
+  };
+
+  const handleToggleRead = async (notifId: string) => {
+    const target = notifications.find((n) => n.id === notifId);
+    if (!target) return;
+    const updatedIsRead = !target.isRead;
+
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notifId ? { ...n, isRead: updatedIsRead } : n))
+    );
+
+    try {
+      await setDoc(doc(db, 'tenants', tenant.id, 'notifications', notifId), {
+        isRead: updatedIsRead
+      }, { merge: true });
+    } catch {}
+  };
+
+  const handleDeleteNotification = async (notifId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+
+    setToast({
+      id: `toast_del_${Date.now()}`,
+      type: 'info',
+      title: 'Notification Dismissed',
+      message: 'Alert removed from list.'
+    });
+
+    try {
+      await deleteDoc(doc(db, 'tenants', tenant.id, 'notifications', notifId));
+    } catch {}
+  };
+
+  const handleMarkAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+    setToast({
+      id: `toast_readall_${Date.now()}`,
+      type: 'success',
+      title: 'All Alerts Marked as Read',
+      message: 'Your notification list is up to date.'
+    });
+
+    try {
+      notifications.forEach(async (n) => {
+        if (!n.isRead) {
+          await setDoc(doc(db, 'tenants', tenant.id, 'notifications', n.id), { isRead: true }, { merge: true });
+        }
+      });
+    } catch {}
+  };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const filteredNotifications = notifications.filter((n) => {
+    if (notificationFilter === 'UNREAD') return !n.isRead;
+    if (notificationFilter === 'ALERTS') return n.category === 'ALERT' || n.priority === 'HIGH' || n.priority === 'URGENT';
+    return true;
+  });
 
   // 5-minute inactivity timer to logout and go to public website
   React.useEffect(() => {
@@ -323,49 +698,232 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="relative p-2 text-[#DCEBFA] hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition duration-150"
-                title="Seminary Notifications"
+                title={`${tenant.name} Notifications & Alerts`}
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full ring-2 ring-[#0B2A4A]" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-400 text-slate-950 font-extrabold text-[10px] rounded-full flex items-center justify-center ring-2 ring-[#0B2A4A] shadow-xs animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 top-11 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 space-y-2 text-slate-900">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <span className="text-xs font-bold text-slate-900">Institutional Alerts</span>
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                      3 New
-                    </span>
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsNotificationsOpen(false)}
+                  />
+                  <div className="absolute right-0 top-11 w-84 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3.5 z-50 space-y-3 text-slate-900 animate-in fade-in zoom-in-95 duration-150">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-slate-900">Institutional Alerts</span>
+                        {unreadCount > 0 ? (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            {unreadCount} New
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            All Caught Up
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Add Notification Trigger Button */}
+                      <button
+                        onClick={() => {
+                          setIsNotificationsOpen(false);
+                          setIsAddNotificationModalOpen(true);
+                        }}
+                        className="flex items-center space-x-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] rounded-lg shadow-xs transition"
+                        title="Broadcast new notification to this tenant"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Notification</span>
+                      </button>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center space-x-1.5 text-[11px]">
+                      <button
+                        onClick={() => setNotificationFilter('ALL')}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition ${
+                          notificationFilter === 'ALL'
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        All ({notifications.length})
+                      </button>
+                      <button
+                        onClick={() => setNotificationFilter('UNREAD')}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition ${
+                          notificationFilter === 'UNREAD'
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Unread ({unreadCount})
+                      </button>
+                      <button
+                        onClick={() => setNotificationFilter('ALERTS')}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition ${
+                          notificationFilter === 'ALERTS'
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Urgent / Alerts
+                      </button>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="space-y-2 max-h-76 overflow-y-auto pr-0.5">
+                      {filteredNotifications.length === 0 ? (
+                        <div className="py-8 text-center text-slate-400 space-y-2">
+                          <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto opacity-70" />
+                          <p className="text-xs font-semibold text-slate-600">No alerts in this view</p>
+                          <p className="text-[11px] text-slate-400">
+                            {notificationFilter === 'UNREAD'
+                              ? 'You have read all pending notifications.'
+                              : 'Create a notification to broadcast an update.'}
+                          </p>
+                          <button
+                            onClick={() => {
+                              setIsNotificationsOpen(false);
+                              setIsAddNotificationModalOpen(true);
+                            }}
+                            className="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-700 underline"
+                          >
+                            + Add a Notification
+                          </button>
+                        </div>
+                      ) : (
+                        filteredNotifications.map((notif) => {
+                          const isUrgent = notif.priority === 'URGENT' || notif.priority === 'HIGH';
+                          const isAlert = notif.category === 'ALERT';
+
+                          return (
+                            <div
+                              key={notif.id}
+                              onClick={() => handleToggleRead(notif.id)}
+                              className={`p-2.5 rounded-xl border transition cursor-pointer relative group ${
+                                !notif.isRead
+                                  ? 'bg-indigo-50/60 border-indigo-100 hover:bg-indigo-50'
+                                  : 'bg-slate-50 border-slate-100 hover:bg-slate-100'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center space-x-1.5 flex-wrap">
+                                  <span
+                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
+                                      isAlert || notif.priority === 'URGENT'
+                                        ? 'bg-rose-100 text-rose-700 border-rose-200'
+                                        : notif.category === 'ACADEMIC'
+                                        ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                        : notif.category === 'FINANCIAL'
+                                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                        : notif.category === 'STOCK'
+                                        ? 'bg-amber-100 text-amber-700 border-amber-200'
+                                        : 'bg-slate-200 text-slate-700 border-slate-300'
+                                    }`}
+                                  >
+                                    {notif.category}
+                                  </span>
+
+                                  {isUrgent && (
+                                    <span className="text-[9px] font-extrabold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 flex items-center gap-0.5">
+                                      <AlertTriangle className="w-2.5 h-2.5" />
+                                      {notif.priority}
+                                    </span>
+                                  )}
+
+                                  <span className="text-[9px] text-slate-400 font-medium">
+                                    • For: {notif.targetAudience}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center space-x-1 flex-shrink-0">
+                                  {!notif.isRead && (
+                                    <span className="w-2 h-2 rounded-full bg-indigo-600" title="Unread" />
+                                  )}
+                                  <button
+                                    onClick={(e) => handleDeleteNotification(notif.id, e)}
+                                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 p-1 rounded transition"
+                                    title="Dismiss notification"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="font-semibold text-xs text-slate-800 mt-1">
+                                {notif.title}
+                              </div>
+                              <div className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                {notif.message}
+                              </div>
+
+                              <div className="text-[9px] text-slate-400 mt-1.5 flex items-center justify-between">
+                                <span className="flex items-center space-x-1">
+                                  <Clock className="w-3 h-3 text-slate-400" />
+                                  <span>{formatRelativeTime(notif.timestamp)}</span>
+                                </span>
+                                {notif.authorName && (
+                                  <span className="truncate max-w-[140px]">
+                                    By {notif.authorName}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                      {unreadCount > 0 ? (
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          className="text-[11px] font-medium text-slate-500 hover:text-slate-800 flex items-center space-x-1 transition"
+                        >
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          <span>Mark all as read</span>
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-slate-400">All notifications seen</span>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setIsNotificationsOpen(false);
+                          setIsAddNotificationModalOpen(true);
+                        }}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center space-x-1 transition"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Compose</span>
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100 transition cursor-pointer">
-                      <div className="font-semibold text-slate-800">Practicum Log Submitted</div>
-                      <div className="text-[11px] text-slate-500">Samuel Mwangi logged 12 hrs at ACK Cathedral Nyeri.</div>
-                      <div className="text-[9px] text-slate-400 mt-1 flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>15 mins ago</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100 transition cursor-pointer">
-                      <div className="font-semibold text-slate-800">Diocesan Bursary Received</div>
-                      <div className="text-[11px] text-slate-500">KES 45,000 recorded from Diocese of Mt. Kenya Central.</div>
-                      <div className="text-[9px] text-slate-400 mt-1 flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>2 hours ago</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100 transition cursor-pointer">
-                      <div className="font-semibold text-slate-800">Faculty Chapel Schedule</div>
-                      <div className="text-[11px] text-slate-500">Wednesday morning symposium timetable published.</div>
-                      <div className="text-[9px] text-slate-400 mt-1 flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>Yesterday</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                </>
               )}
             </div>
+
+            {/* Direct Cashier POS & Stock Launch Button */}
+            {(tType === 'BUSINESS' || tenant.modules?.includes('POS_CASHIER') || tenant.modules?.includes('RETAIL_POS')) && (
+              <button
+                onClick={() => setCurrentTab('commerce-pos')}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-xs border border-amber-300 transition duration-150"
+                title="Launch Simple Cashier POS & Stock Terminal"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-slate-950" />
+                <span className="hidden sm:inline">Cashier POS</span>
+              </button>
+            )}
 
             {/* Live Public Website Link */}
             <button
@@ -601,6 +1159,47 @@ export const TenantShell: React.FC<TenantShellProps> = ({ tenant }) => {
           />
         </main>
       </div>
+
+      {/* Add Notification Modal */}
+      <AddNotificationModal
+        isOpen={isAddNotificationModalOpen}
+        onClose={() => setIsAddNotificationModalOpen(false)}
+        onAddNotification={handleAddNotification}
+        tenant={tenant}
+        authorName={user?.displayName || 'Administrator'}
+        authorRole={user?.role || 'STAFF'}
+      />
+
+      {/* Real-Time Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700 flex items-start space-x-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+          <div className="flex-shrink-0 mt-0.5">
+            {toast.type === 'success' && (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            )}
+            {toast.type === 'info' && (
+              <Info className="w-5 h-5 text-blue-400" />
+            )}
+            {toast.type === 'warning' && (
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-bold text-slate-100 flex items-center justify-between">
+              <span>{toast.title}</span>
+              <button
+                onClick={() => setToast(null)}
+                className="text-slate-400 hover:text-white p-0.5 rounded transition"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+              {toast.message}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

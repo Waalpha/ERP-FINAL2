@@ -35,7 +35,8 @@ import {
   X,
   DollarSign,
   Settings,
-  Save
+  Save,
+  ShoppingBag
 } from 'lucide-react';
 import { Tenant, TenantPlan, TenantStatus, MAIN_DOMAIN, SubscriptionTierConfig } from '../../types';
 import { LogoUploader, FaviconUploader } from '../../components/LogoUploader';
@@ -105,7 +106,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   const [heroBadgeInput, setHeroBadgeInput] = useState(platformSettings?.publicWebsiteContent?.heroBadgeText || 'DAVETECH 5.0 Enterprise Cloud Released — Multi-Tenant Architecture');
   const [heroHeadlineInput, setHeroHeadlineInput] = useState(platformSettings?.publicWebsiteContent?.heroHeadline || 'One Powerful Platform. Unlimited Possibilities.');
   const [heroSubheadlineInput, setHeroSubheadlineInput] = useState(platformSettings?.publicWebsiteContent?.heroSubheadline || 'Run your entire organization with DAVETECH Enterprise — a secure, intelligent and scalable cloud platform engineered for schools, colleges, universities, hospitals, clinics, retail shops, and growing enterprises.');
-  const [heroPrimaryCtaInput, setHeroPrimaryCtaInput] = useState(platformSettings?.publicWebsiteContent?.heroPrimaryCtaText || 'Book a Demo');
+  const [heroPrimaryCtaInput, setHeroPrimaryCtaInput] = useState(platformSettings?.publicWebsiteContent?.heroPrimaryCtaText || 'Get Started');
   const [heroSecondaryCtaInput, setHeroSecondaryCtaInput] = useState(platformSettings?.publicWebsiteContent?.heroSecondaryCtaText || 'Explore Solutions');
   const [solutionsTitleInput, setSolutionsTitleInput] = useState(platformSettings?.publicWebsiteContent?.solutionsTitle || 'Engineered for Every Institution & Enterprise');
   const [solutionsSubtitleInput, setSolutionsSubtitleInput] = useState(platformSettings?.publicWebsiteContent?.solutionsSubtitle || 'Purpose-built tailored workflows designed specifically for academic excellence, healthcare operations, and commercial scale.');
@@ -757,6 +758,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end space-x-2">
+                          {(t.type === 'BUSINESS' || t.type === 'RETAIL' || t.id === 'tenant-apex-retail') && (
+                            <button
+                              onClick={() => switchTenantAsSuperAdmin(t.id)}
+                              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-xs flex items-center space-x-1"
+                              title="Launch Simple Cashier Stock & Sales Module"
+                            >
+                              <ShoppingBag className="h-3 w-3 text-slate-950" />
+                              <span className="hidden sm:inline">Cashier POS</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => switchTenantAsSuperAdmin(t.id)}
                             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"

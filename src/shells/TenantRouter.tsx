@@ -18,6 +18,7 @@ import { RetailModule } from '../pages/Retail/RetailModule';
 import { WholesaleModule } from '../pages/Retail/WholesaleModule';
 import { InventoryModule } from '../pages/Retail/InventoryModule';
 import { POSTerminal } from '../pages/Retail/POSTerminal';
+import { SimpleCashierModule } from '../pages/POS/SimpleCashierModule';
 import { RetailSettingsTab } from '../pages/Retail/RetailSettingsTab';
 import { HospitalManagement } from '../pages/Hospital/HospitalManagement';
 import { TenantWebsiteCMS } from '../pages/CMS/TenantWebsiteCMS';
@@ -65,6 +66,15 @@ export const TenantRouter: React.FC<TenantRouterProps> = ({
   const tType = normalizeTenantType(tenant.type);
 
   // Universal Mandatory Modules across ALL tenant types
+  if (currentTab === 'commerce-pos' || currentTab === 'retail-pos' || currentTab === 'simple-pos' || currentTab === 'pos') {
+    return (
+      <SimpleCashierModule
+        onExit={() => onNavigateTab(tType === 'BUSINESS' ? 'commerce-retail' : 'school-overview')}
+        onNavigateTab={onNavigateTab}
+      />
+    );
+  }
+
   if (currentTab === 'tenant-analytics') {
     return <TenantAnalyticsDashboard onNavigate={onNavigateTab} />;
   }
@@ -106,8 +116,13 @@ export const TenantRouter: React.FC<TenantRouterProps> = ({
   }
 
   if (tType === 'BUSINESS') {
-    if (currentTab === 'commerce-pos' || currentTab === 'retail-pos') {
-      return <POSTerminal onExit={() => onNavigateTab('commerce-retail')} />;
+    if (currentTab === 'commerce-pos' || currentTab === 'retail-pos' || currentTab === 'simple-pos' || currentTab === 'pos') {
+      return (
+        <SimpleCashierModule
+          onExit={() => onNavigateTab('commerce-retail')}
+          onNavigateTab={onNavigateTab}
+        />
+      );
     }
     if (currentTab === 'commerce-wholesale') {
       return <WholesaleModule onNavigate={onNavigateTab} />;

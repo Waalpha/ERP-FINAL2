@@ -4,12 +4,13 @@ import { DEFAULT_PUBLIC_WEBSITE_CONTENT } from '../../../types';
 import { GraduationCap, Building2, ShoppingBag, Users2, Stethoscope, Check, ArrowRight } from 'lucide-react';
 
 interface SolutionsSectionProps {
-  onOpenDemo: () => void;
+  onContactSales?: () => void;
 }
 
-export const SolutionsSection: React.FC<SolutionsSectionProps> = ({ onOpenDemo }) => {
+export const SolutionsSection: React.FC<SolutionsSectionProps> = ({ onContactSales }) => {
   const { platformSettings } = useAuth();
   const content = platformSettings?.publicWebsiteContent || DEFAULT_PUBLIC_WEBSITE_CONTENT;
+  const handleAction = onContactSales || (() => {});
 
   return (
     <section id="solutions" className="py-24 bg-white">
@@ -56,8 +57,8 @@ export const SolutionsSection: React.FC<SolutionsSectionProps> = ({ onOpenDemo }
             </div>
             <div className="pt-4">
               <button
-                onClick={onOpenDemo}
-                className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold text-sm group"
+                onClick={handleAction}
+                className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold text-sm group cursor-pointer"
               >
                 Explore School Solution <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>

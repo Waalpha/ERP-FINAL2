@@ -58,7 +58,7 @@ export const DEFAULT_PUBLIC_WEBSITE_CONTENT: PublicWebsiteContent = {
   heroBadgeText: 'DAVETECH 5.0 Enterprise Cloud Released — Multi-Tenant Architecture',
   heroHeadline: 'One Powerful Platform. Unlimited Possibilities.',
   heroSubheadline: 'Run your entire organization with DAVETECH Enterprise — a secure, intelligent and scalable cloud platform engineered for schools, colleges, universities, hospitals, clinics, retail shops, and growing enterprises.',
-  heroPrimaryCtaText: 'Book a Demo',
+  heroPrimaryCtaText: 'Get Started',
   heroSecondaryCtaText: 'Explore Solutions',
   solutionsTitle: 'Engineered for Every Institution & Enterprise',
   solutionsSubtitle: 'Purpose-built tailored workflows designed specifically for academic excellence, healthcare operations, and commercial scale.',
@@ -1344,3 +1344,24 @@ export interface SearchResultItem {
   route: string;
   metadata?: string;
 }
+
+// INSTITUTIONAL NOTIFICATION ITEM
+export type NotificationCategory = 'ANNOUNCEMENT' | 'ALERT' | 'ACADEMIC' | 'FINANCIAL' | 'STOCK' | 'OPERATIONS';
+export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+export type NotificationAudience = 'ALL' | 'STAFF' | 'STUDENTS' | 'MANAGEMENT';
+
+export interface AppNotification {
+  id: string;
+  tenantId: string;
+  title: string;
+  message: string;
+  category: NotificationCategory;
+  priority: NotificationPriority;
+  targetAudience: NotificationAudience;
+  timestamp: string;
+  isRead: boolean;
+  authorName: string;
+  authorRole?: string;
+}
+
+export * from './pos';

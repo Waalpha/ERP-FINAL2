@@ -4,13 +4,19 @@ import { DEFAULT_PUBLIC_WEBSITE_CONTENT } from '../../../types';
 import { CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 
 interface PricingSectionProps {
-  onOpenDemo: (plan?: string) => void;
+  onContactSales?: (plan?: string) => void;
 }
 
-export const PricingSection: React.FC<PricingSectionProps> = ({ onOpenDemo }) => {
+export const PricingSection: React.FC<PricingSectionProps> = ({ onContactSales }) => {
   const { platformSettings, subscriptionTiers } = useAuth();
   const content = platformSettings?.publicWebsiteContent || DEFAULT_PUBLIC_WEBSITE_CONTENT;
   const [isAnnual, setIsAnnual] = useState(true);
+
+  const handleSelectPlan = (planName?: string) => {
+    if (onContactSales) {
+      onContactSales(planName);
+    }
+  };
 
   // Map system subscription tiers to marketing card display format
   const plans = subscriptionTiers.map((tier) => {
@@ -115,8 +121,8 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onOpenDemo }) =>
 
               <div className="pt-8 mt-8 border-t border-slate-800">
                 <button
-                  onClick={() => onOpenDemo(plan.name)}
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${plan.buttonBg}`}
+                  onClick={() => handleSelectPlan(plan.name)}
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${plan.buttonBg}`}
                 >
                   Get Started with {plan.name} <ArrowRight className="w-4 h-4" />
                 </button>
@@ -133,8 +139,8 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onOpenDemo }) =>
           </p>
           <div className="pt-2">
             <button
-              onClick={() => onOpenDemo('ENTERPRISE_CUSTOM')}
-              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-colors"
+              onClick={() => handleSelectPlan('ENTERPRISE_CUSTOM')}
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-colors cursor-pointer"
             >
               Contact Enterprise Sales <ArrowRight className="w-4 h-4" />
             </button>

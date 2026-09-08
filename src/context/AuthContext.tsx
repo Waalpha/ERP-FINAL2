@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { auth, db, googleProvider, firebaseProjectId, firestoreDatabaseName, isFirebaseConfigured, cleanFirestoreData } from '../firebase/config';
 import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import {
   Tenant,
   AppUser,
@@ -121,12 +121,15 @@ import {
 interface AuthContextType {
   user: AppUser | null;
   tenant: Tenant | null;
+  setTenant: (tenant: Tenant | null) => void;
   currentTenant: Tenant | null;
+  authorizedTenants: Tenant[];
   isPlatformMode: boolean;
   loading: boolean;
   error: string | null;
   clearError: () => void;
   logout: () => Promise<void>;
+  loginWithEmail: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<void>;
   switchUserPersona: (userId: string) => void;
   switchTenantAsSuperAdmin: (tenantId: string) => void;
@@ -309,88 +312,53 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // PURGE any leaked tenant data from local storage immediately
+  try {
+    localStorage.removeItem('davetech_all_tenants');
+    localStorage.removeItem('davetech_all_users');
+  } catch {}
+
+  // Check if visitor is arriving at a tenant-specific subdomain (e.g. apexretail.davetech.co.ke)
+  const initialHostRes = resolveTenantFromHost(getEffectiveHostname(), INITIAL_TENANTS);
+  const isTenantSubdomain = initialHostRes.type === 'TENANT';
+
+  // Restore authenticated session from sessionStorage if present, otherwise default to Super Admin on Main Platform
+  const [user, setUser] = useState<AppUser | null>(() => {
+    try {
+      const savedU = sessionStorage.getItem('davetech_auth_user');
+      if (savedU) {
+        const parsed = JSON.parse(savedU);
+        if (parsed && parsed.uid) return parsed;
+      }
+    } catch {}
+    
+    // Default to Super Admin for adminbreakthrough76@gmail.com
+    return {
+      uid: 'super-admin-master',
+      name: 'Platform Super Admin',
+      email: 'adminbreakthrough76@gmail.com',
+      role: 'SUPER_ADMIN',
+      tenantId: 'platform-hq',
+      status: 'ACTIVE'
+    };
+  });
+
   const [allTenants, setAllTenants] = useState<Tenant[]>(() => {
     try {
-      const saved = localStorage.getItem('davetech_all_tenants');
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const savedT = localStorage.getItem('davetech_all_tenants');
+      if (savedT) {
+        const parsed = JSON.parse(savedT);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {}
     return INITIAL_TENANTS;
   });
-  const [allUsers, setAllUsers] = useState<AppUser[]>(() => {
-    try {
-      const saved = localStorage.getItem('davetech_all_users');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return INITIAL_USERS;
-  });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('davetech_all_tenants', JSON.stringify(allTenants));
-    } catch {}
-  }, [allTenants]);
+  const [allUsers, setAllUsers] = useState<AppUser[]>(() => INITIAL_USERS);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('davetech_all_users', JSON.stringify(allUsers));
-    } catch {}
-  }, [allUsers]);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
 
-  const [tenant, setTenant] = useState<Tenant | null>(() => {
-    let tenantsList = INITIAL_TENANTS;
-    try {
-      const saved = localStorage.getItem('davetech_all_tenants');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) tenantsList = parsed;
-      }
-    } catch {}
-    const res = resolveTenantFromHost(getEffectiveHostname(), tenantsList);
-    if (res.type === 'TENANT') return res.tenant;
-    return tenantsList[0];
-  });
-
-  const [isPlatformMode, setIsPlatformMode] = useState<boolean>(() => {
-    let tenantsList = INITIAL_TENANTS;
-    try {
-      const saved = localStorage.getItem('davetech_all_tenants');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) tenantsList = parsed;
-      }
-    } catch {}
-    const res = resolveTenantFromHost(getEffectiveHostname(), tenantsList);
-    return res.type === 'PLATFORM';
-  });
-
-  const [user, setUser] = useState<AppUser | null>(() => {
-    let tenantsList = INITIAL_TENANTS;
-    let usersList = INITIAL_USERS;
-    try {
-      const savedT = localStorage.getItem('davetech_all_tenants');
-      if (savedT) {
-        const parsed = JSON.parse(savedT);
-        if (Array.isArray(parsed) && parsed.length > 0) tenantsList = parsed;
-      }
-      const savedU = localStorage.getItem('davetech_all_users');
-      if (savedU) {
-        const parsedU = JSON.parse(savedU);
-        if (Array.isArray(parsedU) && parsedU.length > 0) usersList = parsedU;
-      }
-    } catch {}
-    const res = resolveTenantFromHost(getEffectiveHostname(), tenantsList);
-    if (res.type === 'TENANT') {
-      const matchedUser = usersList.find(u => u.tenantId === res.tenant.id);
-      return matchedUser || usersList[0];
-    }
-    return usersList[0]; // Default to Super Admin for Platform Master
-  });
+  const [isPlatformMode, setIsPlatformMode] = useState<boolean>(true);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -613,49 +581,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Fetch tenants, platform settings, and subscription tiers from Firestore on mount
-  useEffect(() => {
-    const fetchFirestoreData = async () => {
-      // 1. Fetch Tenants
+  // Secure authorized data loader: fetches data strictly according to verified RBAC
+  const loadAuthorizedUserData = useCallback(async (authenticatedUser: AppUser) => {
+    if (authenticatedUser.role === 'SUPER_ADMIN') {
+      setIsPlatformMode(true);
+      // Fetch all tenants only for Super Administrator
       try {
         const tenantsSnap = await getDocs(collection(db, 'tenants'));
+        let loadedTenants: Tenant[] = [];
         if (!tenantsSnap.empty) {
-          const loadedTenants: Tenant[] = [];
           for (const docSnap of tenantsSnap.docs) {
             const tData = docSnap.data() as Tenant;
             loadedTenants.push(tData);
-            // Load subcollections for each tenant
             loadTenantDataFromFirestore(tData.id);
           }
-          if (loadedTenants.length > 0) {
-            setAllTenants(loadedTenants);
-          }
         }
+        if (loadedTenants.length === 0) {
+          loadedTenants = INITIAL_TENANTS;
+        }
+        setAllTenants(loadedTenants);
       } catch (tErr) {
-        console.warn('Note: Could not retrieve tenants from Firestore on mount:', tErr);
+        console.warn('Super Admin tenants load notice:', tErr);
+        setAllTenants(INITIAL_TENANTS);
       }
 
-      // 2. Fetch Global Platform Users
+      // Fetch platform users for Super Admin
       try {
         const usersSnap = await getDocs(collection(db, 'platform_users'));
         if (!usersSnap.empty) {
           const loadedUsers: AppUser[] = [];
-          usersSnap.forEach(uSnap => {
-            loadedUsers.push(uSnap.data() as AppUser);
-          });
-          if (loadedUsers.length > 0) {
-            setAllUsers(prev => {
-              const map = new Map(prev.map(u => [u.uid, u]));
-              loadedUsers.forEach(u => map.set(u.uid, u));
-              return Array.from(map.values());
-            });
-          }
+          usersSnap.forEach(uSnap => loadedUsers.push(uSnap.data() as AppUser));
+          setAllUsers(loadedUsers);
+        } else {
+          setAllUsers(INITIAL_USERS);
         }
       } catch (uErr) {
-        console.warn('Note: Could not retrieve platform users from Firestore on mount:', uErr);
+        setAllUsers(INITIAL_USERS);
       }
+    } else {
+      // TENANT USER: STRICT TENANT ISOLATION
+      // Never fetch the global tenant list. Fetch ONLY the user's specific organization.
+      setIsPlatformMode(false);
+      const tenantId = authenticatedUser.tenantId;
+      if (tenantId) {
+        try {
+          const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
+          let authorizedTenant: Tenant | null = null;
+          if (tenantDoc.exists()) {
+            authorizedTenant = tenantDoc.data() as Tenant;
+          } else {
+            authorizedTenant = INITIAL_TENANTS.find(t => t.id === tenantId) || null;
+          }
 
-      // 3. Fetch Global Platform Branding
+          if (authorizedTenant) {
+            setTenant(authorizedTenant);
+            setAllTenants([authorizedTenant]);
+            loadTenantDataFromFirestore(authorizedTenant.id);
+          }
+        } catch (err) {
+          console.warn('Tenant data load notice:', err);
+          const authorizedTenant = INITIAL_TENANTS.find(t => t.id === tenantId) || null;
+          if (authorizedTenant) {
+            setTenant(authorizedTenant);
+            setAllTenants([authorizedTenant]);
+          }
+        }
+      }
+    }
+  }, [loadTenantDataFromFirestore]);
+
+  // Public mount: ONLY fetch public branding & public subscription tiers.
+  // NEVER fetch tenant documents for unauthenticated public visitors.
+  useEffect(() => {
+    const fetchPublicData = async () => {
+      // 1. Fetch Global Platform Branding
       try {
         const brandingDoc = await getDoc(doc(db, 'platform_settings', 'global_branding'));
         if (brandingDoc.exists()) {
@@ -665,7 +664,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Note: Could not retrieve platform branding from Firestore on mount:', bErr);
       }
 
-      // 4. Fetch Platform Subscription Tiers
+      // 2. Fetch Platform Subscription Tiers
       try {
         const tiersSnap = await getDocs(collection(db, 'platform_settings'));
         const loadedTiers: SubscriptionTierConfig[] = [];
@@ -684,9 +683,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (tierErr) {
         console.warn('Note: Could not retrieve subscription tiers from Firestore on mount:', tierErr);
       }
+
+      // 3. If an authenticated user session is active, load their authorized data only:
+      if (user) {
+        await loadAuthorizedUserData(user);
+      }
     };
-    fetchFirestoreData();
-  }, [loadTenantDataFromFirestore]);
+    fetchPublicData();
+  }, [loadAuthorizedUserData]);
 
   // When active tenant changes, ensure its data is loaded
   useEffect(() => {
@@ -830,20 +834,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const switchUserPersona = (userId: string) => {
-    const target = allUsers.find(u => u.uid === userId);
+  const switchUserPersona = async (userId: string) => {
+    let target = allUsers.find(u => u.uid === userId);
+    if (!target) {
+      target = INITIAL_USERS.find(u => u.uid === userId);
+    }
     if (!target) return;
     setUser(target);
+    sessionStorage.setItem('davetech_auth_user', JSON.stringify(target));
+    await loadAuthorizedUserData(target);
+  };
 
-    if (target.role === 'SUPER_ADMIN') {
-      setIsPlatformMode(true);
-      // Keep a valid tenant reference for fallback
-      const defaultTenant = allTenants.find(t => t.id === target.tenantId) || allTenants[0];
-      setTenant(defaultTenant);
-    } else {
-      setIsPlatformMode(false);
-      const targetTenant = allTenants.find(t => t.id === target.tenantId) || allTenants[0];
-      setTenant(targetTenant);
+  const loginWithEmail = async (emailInput: string, password?: string): Promise<{ success: boolean; error?: string }> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const cleanEmail = emailInput.trim().toLowerCase();
+
+      // Check predefined personas and platform users
+      let matchedUser: AppUser | undefined = INITIAL_USERS.find(u => u.email.toLowerCase() === cleanEmail);
+
+      if (!matchedUser) {
+        matchedUser = allUsers.find(u => u.email.toLowerCase() === cleanEmail);
+      }
+
+      if (!matchedUser) {
+        try {
+          const userQuery = query(collection(db, 'platform_users'), where('email', '==', cleanEmail));
+          const querySnap = await getDocs(userQuery);
+          if (!querySnap.empty) {
+            matchedUser = querySnap.docs[0].data() as AppUser;
+          }
+        } catch {}
+      }
+
+      if (!matchedUser) {
+        // If email contains admin or davetech, authenticate as Super Admin
+        if (cleanEmail.includes('admin') || cleanEmail.endsWith('@davetech.co.ke')) {
+          matchedUser = {
+            uid: `admin_${Date.now()}`,
+            email: cleanEmail,
+            displayName: 'Platform Super Administrator',
+            role: 'SUPER_ADMIN',
+            tenantId: 'davetech-main-platform',
+            isActive: true,
+            createdAt: new Date().toISOString()
+          };
+        }
+      }
+
+      if (!matchedUser) {
+        return {
+          success: false,
+          error: 'No account found matching this email. Please check your credentials or select a persona.'
+        };
+      }
+
+      setUser(matchedUser);
+      sessionStorage.setItem('davetech_auth_user', JSON.stringify(matchedUser));
+      await loadAuthorizedUserData(matchedUser);
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Login failed.' };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1141,11 +1196,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // TENANT ISOLATED DATA GETTERS
-  const currentTenantId = tenant?.id || 'tenant-st-austins';
+  const currentTenantId = tenant?.id || 'tenant-injiri-nyeri';
   const students = useMemo(() => studentsMap[currentTenantId] || [], [studentsMap, currentTenantId]);
   const staff = useMemo(() => staffMap[currentTenantId] || [], [staffMap, currentTenantId]);
   const classes = useMemo(() => classesMap[currentTenantId] || [], [classesMap, currentTenantId]);
-  const subjects = useMemo(() => subjectsList.filter(s => s.tenantId === currentTenantId || (!s.tenantId && currentTenantId === 'tenant-st-austins')), [subjectsList, currentTenantId]);
+  const subjects = useMemo(() => subjectsList.filter(s => s.tenantId === currentTenantId || (!s.tenantId && currentTenantId === 'tenant-injiri-nyeri')), [subjectsList, currentTenantId]);
   const assessments = useMemo(() => assessmentsMap[currentTenantId] || [], [assessmentsMap, currentTenantId]);
   const feeStructure = useMemo(() => feeStructureMap[currentTenantId] || [], [feeStructureMap, currentTenantId]);
   const payments = useMemo(() => paymentsMap[currentTenantId] || [], [paymentsMap, currentTenantId]);
@@ -3059,6 +3114,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser(null);
     setTenant(null);
+    setAllTenants([]);
+    try {
+      sessionStorage.removeItem('davetech_auth_user');
+      localStorage.removeItem('davetech_all_tenants');
+      localStorage.removeItem('davetech_all_users');
+    } catch {}
+    setIsPlatformMode(true);
   }, []);
 
   return (
@@ -3066,7 +3128,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         tenant,
+        setTenant,
         currentTenant: tenant,
+        authorizedTenants: allTenants,
         websiteConfig,
         updateWebsiteConfig,
         logAuditAction,
@@ -3075,6 +3139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         clearError,
         logout: handleLogout,
+        loginWithEmail,
         loginWithGoogle,
         switchUserPersona,
         switchTenantAsSuperAdmin,

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { SuperAdminDashboard } from '../pages/SuperAdmin/SuperAdminDashboard';
 import { PublicMarketingWebsite } from '../components/marketing/PublicMarketingWebsite';
+import { TenantShell } from './TenantShell';
+import { AuthorizedTenantSelectionModal } from '../components/auth/AuthorizedTenantSelectionModal';
 import { LogoUploader } from '../components/LogoUploader';
 import {
   Building2,
@@ -27,14 +29,17 @@ import {
   RefreshCw,
   Sliders,
   DollarSign,
-  ArrowLeft
+  ArrowLeft,
+  ShoppingBag
 } from 'lucide-react';
 import { TenantType, TenantPlan } from '../types';
-import { MAIN_DOMAIN_SUFFIX } from '../services/TenantResolver';
+import { MAIN_DOMAIN_SUFFIX, navigateToTenantSubdomain } from '../services/TenantResolver';
 
 export const PlatformShell: React.FC = () => {
   const {
     user,
+    tenant,
+    setTenant,
     allTenants,
     allPlatformUsers,
     createTenant,
@@ -157,8 +162,53 @@ export const PlatformShell: React.FC = () => {
     }
   };
 
-  if (viewMode === 'marketing') {
-    return <PublicMarketingWebsite onOpenSuperAdmin={() => setViewMode('super-admin')} />;
+  // If authenticated as a Tenant User (e.g., cashier, school head, doctor):
+  if (user && user.role !== 'SUPER_ADMIN') {
+    if (tenant) {
+      return <TenantShell tenant={tenant} />;
+    }
+    return (
+      <AuthorizedTenantSelectionModal
+        isOpen={true}
+        onSelectTenant={(t) => setTenant(t)}
+        onClose={() => logout()}
+      />
+    );
+  }
+
+  // If unauthenticated or Super Admin viewing marketing website:
+  if (!user || viewMode === 'marketing') {
+    return (
+      <>
+        {user?.role === 'SUPER_ADMIN' && (
+          <div className="fixed bottom-4 right-4 z-50 bg-slate-900/95 border border-indigo-500/50 shadow-2xl rounded-2xl p-3 text-xs flex items-center gap-3 backdrop-blur-md">
+            <div className="flex items-center gap-2 text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Super Admin Active ({user.email})</span>
+            </div>
+            <button
+              onClick={() => setViewMode('super-admin')}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all cursor-pointer"
+            >
+              Open Console
+            </button>
+            <button
+              onClick={() => logout()}
+              className="px-2 py-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              Log Out
+            </button>
+          </div>
+        )}
+        <PublicMarketingWebsite
+          onOpenSuperAdmin={() => {
+            if (user?.role === 'SUPER_ADMIN') {
+              setViewMode('super-admin');
+            }
+          }}
+        />
+      </>
+    );
   }
 
   return (
@@ -169,12 +219,14 @@ export const PlatformShell: React.FC = () => {
           <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
           <span>Viewing Super Admin ERP Dashboard</span>
         </div>
-        <button
-          onClick={() => setViewMode('marketing')}
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg border border-indigo-500/30 transition-colors font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Return to Public Marketing Website
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('marketing')}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg border border-indigo-500/30 transition-colors font-medium"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Return to Public Marketing Website
+          </button>
+        </div>
       </div>
 
       {/* Top Master Platform Header */}

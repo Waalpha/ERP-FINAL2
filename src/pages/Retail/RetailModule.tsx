@@ -138,10 +138,10 @@ export const RetailModule: React.FC<RetailModuleProps> = ({ onNavigate }) => {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => onNavigate('commerce-pos')}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-sm flex items-center space-x-2 transition"
+            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-extrabold text-sm shadow-md flex items-center space-x-2 transition border border-amber-300"
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Launch POS Terminal</span>
+            <ShoppingBag className="w-4 h-4 text-slate-950" />
+            <span>Open Cashier POS & Stock</span>
           </button>
         </div>
       </div>

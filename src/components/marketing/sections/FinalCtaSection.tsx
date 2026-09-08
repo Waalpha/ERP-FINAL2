@@ -2,10 +2,11 @@ import React from 'react';
 import { ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
 
 interface FinalCtaSectionProps {
-  onOpenDemo: () => void;
+  onContactSales?: () => void;
 }
 
-export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onOpenDemo }) => {
+export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onContactSales }) => {
+  const handleClick = onContactSales || (() => {});
   return (
     <section className="py-24 bg-slate-950 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-teal-500/10 blur-3xl pointer-events-none" />
@@ -25,16 +26,16 @@ export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onOpenDemo }) 
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <button
-            onClick={onOpenDemo}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold text-base shadow-xl shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5"
+            onClick={handleClick}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold text-base shadow-xl shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 cursor-pointer"
           >
-            Book a Free Demo <ArrowRight className="w-5 h-5" />
+            Get Started Today <ArrowRight className="w-5 h-5" />
           </button>
           <button
-            onClick={onOpenDemo}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-8 py-4 rounded-xl font-semibold text-base border border-slate-800 transition-all"
+            onClick={handleClick}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-8 py-4 rounded-xl font-semibold text-base border border-slate-800 transition-all cursor-pointer"
           >
-            Talk to Our Team
+            Contact Sales Team
           </button>
         </div>
 

@@ -46,49 +46,7 @@ import {
 } from '../types';
 
 export const INITIAL_TENANTS: Tenant[] = [
-  {
-    id: 'tenant-st-austins',
-    name: "St. Austin's Academy & Junior School",
-    code: 'STA-SCH',
-    subdomain: 'staustins',
-    customDomain: 'portal.staustins.ac.ke',
-    dnsStatus: 'CONFIGURED',
-    type: 'PRIMARY_SCHOOL',
-    status: 'ACTIVE',
-    createdAt: '2024-01-10T08:00:00.000Z',
-    plan: 'ENTERPRISE',
-    modules: [
-      'STUDENTS',
-      'STAFF',
-      'CLASSES',
-      'CBC_ACADEMICS',
-      'ASSESSMENTS',
-      'FEES_FINANCE',
-      'ATTENDANCE',
-      'TIMETABLE',
-      'ASSIGNMENTS',
-      'DISCIPLINE',
-      'PROMOTIONS',
-      'CALENDAR',
-      'SMS_NOTIFICATIONS',
-      'REPORTS'
-    ],
-    logoUrl: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=160&auto=format&fit=crop&q=80',
-    motto: 'Excellence in Character, Leadership & CBC Competence',
-    contactEmail: 'info@staustins.ac.ke',
-    phone: '+254 712 345 678',
-    address: 'Rhapta Road, Westlands, Nairobi, Kenya',
-    country: 'Kenya',
-    currency: 'KES',
-    currentTerm: 'TERM_1',
-    currentAcademicYear: '2025',
-    stats: {
-      studentCount: 480,
-      staffCount: 38,
-      totalFeeCollected: 8450000,
-      totalFeeBalance: 1240000
-    }
-  },
+
   {
     id: 'tenant-injiri-nyeri',
     name: 'Injiri Centre Nyeri',
@@ -295,6 +253,35 @@ export const INITIAL_TENANTS: Tenant[] = [
       totalFeeCollected: 7200000,
       totalFeeBalance: 980000
     }
+  },
+  {
+    id: 'tenant-apex-retail',
+    name: 'Apex Bar & Lounge (POS & Stock ERP)',
+    code: 'APX-BAR',
+    subdomain: 'apexretail',
+    customDomain: 'pos.apexbar.co.ke',
+    dnsStatus: 'CONFIGURED',
+    type: 'BUSINESS',
+    status: 'ACTIVE',
+    createdAt: '2024-04-01T08:00:00.000Z',
+    plan: 'ENTERPRISE',
+    modules: ['POS_CASHIER', 'STOCK_CONTROL', 'COMMERCE', 'REPORTS', 'STAFF'],
+    currency: 'KES',
+    contactEmail: 'manager@apexbar.co.ke',
+    phone: '+254 711 555 777',
+    address: 'Rhapta Road, Westlands, Nairobi, Kenya',
+    motto: 'Fast Stock & Sales Control for Modern Hospitality',
+    primaryColor: '#059669',
+    secondaryColor: '#0f172a',
+    logoUrl: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=160&auto=format&fit=crop&q=80',
+    currentTerm: 'TERM_1',
+    currentAcademicYear: '2025/2026',
+    stats: {
+      studentCount: 0,
+      staffCount: 8,
+      totalFeeCollected: 85450,
+      totalFeeBalance: 0
+    }
   }
 ];
 
@@ -444,6 +431,28 @@ export const INITIAL_USERS: AppUser[] = [
     isActive: true,
     phone: '+254 712 345 605',
     photoURL: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80'
+  },
+  {
+    uid: 'user-apex-owner',
+    email: 'manager@apexbar.co.ke',
+    displayName: 'David K. Maina (Proprietor & General Manager)',
+    tenantId: 'tenant-apex-retail',
+    tenantName: 'Apex Bar & Lounge',
+    role: 'TENANT_ADMIN',
+    isActive: true,
+    phone: '+254 711 555 777',
+    photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
+  },
+  {
+    uid: 'user-apex-cashier',
+    email: 'cashier@apexbar.co.ke',
+    displayName: 'Beatrice Achieng (Shift Cashier)',
+    tenantId: 'tenant-apex-retail',
+    tenantName: 'Apex Bar & Lounge',
+    role: 'CASHIER',
+    isActive: true,
+    phone: '+254 712 888 999',
+    photoURL: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80'
   }
 ];
 

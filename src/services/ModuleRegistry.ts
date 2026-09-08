@@ -82,6 +82,7 @@ export function getNavigationForTenant(tenant: Tenant): NavSection[] {
           items: [
             { id: 'college-fees', label: 'Fees & Finance', icon: Receipt },
             { id: 'college-payments', label: 'Payments', icon: CreditCard },
+            { id: 'commerce-pos', label: 'Cafeteria & Bookshop POS', icon: ShoppingBag },
             { id: 'college-invoices', label: 'Invoices', icon: Receipt },
             { id: 'college-financial-reports', label: 'Financial Reports', icon: FileText }
           ]
@@ -177,9 +178,9 @@ export function getNavigationForTenant(tenant: Tenant): NavSection[] {
         {
           title: 'COMMERCE OPERATIONS',
           items: [
+            { id: 'commerce-pos', label: 'Cashier POS & Stock', icon: CreditCard },
             { id: 'commerce-retail', label: 'Retail', icon: ShoppingBag },
             { id: 'commerce-wholesale', label: 'Wholesale', icon: Receipt },
-            { id: 'commerce-pos', label: 'POS Terminal', icon: CreditCard },
             { id: 'commerce-inventory', label: 'Inventory', icon: Layers },
             { id: 'staff-directory', label: 'Staff Directory', icon: Users },
             { id: 'tenant-website-cms', label: 'Website / CMS', icon: Globe },
@@ -199,6 +200,7 @@ export function getNavigationForTenant(tenant: Tenant): NavSection[] {
             { id: 'hospital-consultations', label: 'Doctor Consultations', icon: UserCheck },
             { id: 'hospital-pharmacy', label: 'Pharmacy & Dispensing', icon: Layers },
             { id: 'hospital-billing', label: 'Billing & Invoices', icon: Receipt },
+            { id: 'commerce-pos', label: 'Cashier & POS Counter', icon: ShoppingBag },
             { id: 'staff-directory', label: 'Staff & Personnel', icon: Users },
             { id: 'tenant-website-cms', label: 'Website / CMS', icon: Globe },
             { id: 'system-administration', label: 'System Administration', icon: Shield },
@@ -226,6 +228,7 @@ export function getNavigationForTenant(tenant: Tenant): NavSection[] {
           title: 'FINANCE & OPERATIONS',
           items: [
             { id: 'school-fees', label: 'Fee Structure & Receipts', icon: CreditCard },
+            { id: 'commerce-pos', label: 'Canteen & Store POS', icon: ShoppingBag },
             { id: 'school-attendance', label: 'Attendance Tracking', icon: Calendar },
             { id: 'staff-directory', label: 'Staff Directory', icon: Users },
             { id: 'school-discipline', label: 'Discipline & Pastoral', icon: Shield },

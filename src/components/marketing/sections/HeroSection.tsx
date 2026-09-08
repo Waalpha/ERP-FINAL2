@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 interface HeroSectionProps {
-  onOpenDemo: () => void;
+  onContactSales: () => void;
   onExploreSolutions: () => void;
 }
 
@@ -38,8 +38,8 @@ interface SlideData {
   description: string;
   primaryCta: string;
   secondaryCta: string;
-  primaryAction: 'demo' | 'solutions';
-  secondaryAction: 'demo' | 'solutions';
+  primaryAction: 'contact' | 'solutions';
+  secondaryAction: 'contact' | 'solutions';
   trustIndicators: string[];
   moduleType: 'enterprise' | 'school' | 'college' | 'hospital' | 'retail';
   floatingBadge1: { text: string; sub?: string; icon: any };
@@ -54,10 +54,10 @@ const SLIDES: SlideData[] = [
     headlinePart2: 'Unlimited Possibilities.',
     description:
       'Run your entire organization with DAVETECH Enterprise — a secure, intelligent and scalable cloud platform engineered for schools, colleges, universities, hospitals, clinics, retail shops, and growing enterprises.',
-    primaryCta: 'Book a Demo →',
-    secondaryCta: 'Explore Solutions',
-    primaryAction: 'demo',
-    secondaryAction: 'solutions',
+    primaryCta: 'Explore Solutions →',
+    secondaryCta: 'Contact Sales',
+    primaryAction: 'solutions',
+    secondaryAction: 'contact',
     trustIndicators: [
       'ISO 27001 Certified Security',
       '99.99% Cloud Uptime SLA',
@@ -83,9 +83,9 @@ const SLIDES: SlideData[] = [
     description:
       'A complete cloud-based school management platform for modern schools — from admissions and academics to fees, examinations, attendance, communication and reporting.',
     primaryCta: 'Explore School ERP →',
-    secondaryCta: 'Book a Demo',
+    secondaryCta: 'Contact Sales',
     primaryAction: 'solutions',
-    secondaryAction: 'demo',
+    secondaryAction: 'contact',
     trustIndicators: [
       'CBC & 8-4-4 Ready',
       'M-Pesa Automated Reconciliation',
@@ -111,9 +111,9 @@ const SLIDES: SlideData[] = [
     description:
       'Manage students, programmes, departments, faculty, finance, examinations, accommodation, communication and administration from one intelligent cloud platform.',
     primaryCta: 'Explore College ERP →',
-    secondaryCta: 'Book a Demo',
+    secondaryCta: 'Contact Sales',
     primaryAction: 'solutions',
-    secondaryAction: 'demo',
+    secondaryAction: 'contact',
     trustIndicators: [
       'CUE & TVET Aligned Curricula',
       'Automated Transcripts & GPA',
@@ -139,9 +139,9 @@ const SLIDES: SlideData[] = [
     description:
       'Connect clinical and administrative operations with a secure healthcare management platform built for hospitals and clinics.',
     primaryCta: 'Explore Hospital EMR →',
-    secondaryCta: 'Book a Demo',
+    secondaryCta: 'Contact Sales',
     primaryAction: 'solutions',
-    secondaryAction: 'demo',
+    secondaryAction: 'contact',
     trustIndicators: [
       'HIPAA & Data Protection Compliant',
       'Direct SHA / NHIF Claims Processing',
@@ -167,9 +167,9 @@ const SLIDES: SlideData[] = [
     description:
       'Powerful cloud POS and business management tools for retail shops and growing enterprises — with sales, inventory, customers, suppliers, payments and reporting in one platform.',
     primaryCta: 'Explore Retail POS →',
-    secondaryCta: 'Book a Demo',
+    secondaryCta: 'Contact Sales',
     primaryAction: 'solutions',
-    secondaryAction: 'demo',
+    secondaryAction: 'contact',
     trustIndicators: [
       'Instant M-Pesa STK Checkout',
       'Barcode Scanning & Receipt Printing',
@@ -189,7 +189,7 @@ const SLIDES: SlideData[] = [
   }
 ];
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo, onExploreSolutions }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onContactSales, onExploreSolutions }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -248,9 +248,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo, onExploreS
     setTouchStartX(null);
   };
 
-  const handleCtaClick = (action: 'demo' | 'solutions') => {
-    if (action === 'demo') {
-      onOpenDemo();
+  const handleCtaClick = (action: 'contact' | 'solutions') => {
+    if (action === 'contact') {
+      onContactSales();
     } else {
       onExploreSolutions();
     }
@@ -659,7 +659,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo, onExploreS
                     <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                       <div>
                         <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <span>Apex Retail & Supermarket Stores</span>
+                          <span>Davetech Retail POS Terminal</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">Cloud POS</span>
                         </div>
                         <p className="text-[11px] text-slate-400">Multi-Register Sales, Barcode Scanning & Stock Control</p>
